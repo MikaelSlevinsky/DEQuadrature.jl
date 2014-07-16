@@ -34,11 +34,11 @@ on the real line to high accuracy (which equals 12pi/13). We start by recording 
 and we use the package function DEMapValues to calculate the optimized map and the function DENodesAndWeights to calculate nodes and weights. Looping over a geometrically increasing order, we can approximate the integral very accurately:
 
 
-	u0,u,xpre = DEMapValues(z;digits=200,domain=Infinite)
-	for i = 1:10
-		x,w = DENodesAndWeights(u0,u,2^i;digits=200,domain=Infinite);
+	u0,u,xpre = DEMapValues(z;digits=400,domain=Infinite)
+	for i = 1:11
+		x,w = DENodesAndWeights(u0,u,2^i;digits=400,domain=Infinite);
 		println(dot(f(x),w)/pi*13/12)
-	 end
+	end
 
 
 References:
