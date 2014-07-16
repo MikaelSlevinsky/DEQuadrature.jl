@@ -1,6 +1,6 @@
 # DEQuadrature
 
-A module by Richard Mika‘l Slevinsky,
+A module by Richard Mikael Slevinsky,
 Department of Mathematical & Statistical Sciences,
 University of Alberta, July 2014.
 
