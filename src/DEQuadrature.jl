@@ -39,7 +39,8 @@ Infinite = Domain(t->sinh(t),t->asinh(t),t->cosh(t))
 SemiInfinite1 = Domain(t->log(exp(t)+1),t->log(exp(t)-1),t->1./(1+exp(-t)))
 SemiInfinite2 = Domain(t->exp(t),t->log(t),t->exp(t))
 
-function DENodesAndWeights{T<:Number}(z::Array{Complex{T},1},n::Integer;digits::Integer=77,domain::Domain=Finite,Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+function DENodesAndWeights{T<:Number}(z::Array{Complex{T},1},n::Integer;digits::Integer=77
+			,domain::Domain=Finite,Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
 	#
 	# On entry:
 	#
