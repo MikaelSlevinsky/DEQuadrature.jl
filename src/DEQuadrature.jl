@@ -92,8 +92,7 @@ function DEMapValues{T<:Number}(datin::Array{T,1},eptin::Array{T,1},Hint::Intege
 	# u0 and u are the parameters of the map h(t) in Eq. (3.14), and
 	# x are the x-coordinates of the pre-images x +/- i pi/2 of the singularities.
 	#
-	global n = length(datin) == length(eptin) ? length(datin) : 
-		error("The lengths of the singularity arrays are different.")
+	global n = length(datin) == length(eptin) ? length(datin) : error("The lengths of the singularity arrays are different.")
 	global dat = convert(Array{Float64,1},datin)
 	global ept = convert(Array{Float64,1},eptin)
 
@@ -105,9 +104,9 @@ function DEMapValues{T<:Number}(datin::Array{T,1},eptin::Array{T,1},Hint::Intege
 	g_L = -g_U
 
 	prob = createProblem(2n, x_L, x_U, 2n, g_L, g_U, 4n^2, n*(2n+1),eval_f, eval_g, eval_grad_f, eval_jac_g,)#, eval_h)
-	addOption(prob, "hessian_approximation", "limited-memory")
-	addOption(prob, "obj_scaling_factor", obj_scaling_factor)
 	addOption(prob, "print_level", 0)
+	addOption(prob, "obj_scaling_factor", obj_scaling_factor)
+	addOption(prob, "hessian_approximation", "limited-memory")
 	
 	eptbar,mindex = findmin(ept)
 	datbar = dat[mindex]
@@ -123,11 +122,8 @@ function DEMapValues{T<:Number}(datin::Array{T,1},eptin::Array{T,1},Hint::Intege
 		global dat = (1-j/Hint).*dattest.+j/Hint.*datexact
 		global ept = (1-j/Hint).*epttest.+j/Hint.*eptexact
 		status = solveProblem(prob)
-		if Ipopt.ApplicationReturnStatus[status] != :Solve_Succeeded 
-			&& Ipopt.ApplicationReturnStatus[status] != :Solved_To_Acceptable_Level
-			error("There was a problem with the convergence.\n 
-			Try a larger homotopy or a smaller objective scaling factor.\n 
-			The Ipopt return status is ",Ipopt.ApplicationReturnStatus[status],".")
+		if Ipopt.ApplicationReturnStatus[status] != :Solve_Succeeded && Ipopt.ApplicationReturnStatus[status] != :Solved_To_Acceptable_Level
+			error("There was a problem with the convergence.\n Try a larger homotopy or a smaller objective scaling factor.\n The Ipopt return status is ",Ipopt.ApplicationReturnStatus[status],".")
 		end
 	end
 	
