@@ -28,9 +28,13 @@ julia> z = [complex(BigFloat("-0.5"),BigFloat("1.0")),complex(BigFloat("0.5"),Bi
 and we use the package function DENodesAndWeights to calculate nodes and weights. With these, we use the BLAS function dot to calculate the quadrature. This is looped over a geometrically increasing order:
 
 julia> for i = 1:10
+
 		@time x,w = DENodesAndWeights(z,2^i;digits=200,domain=Infinite);
+
 		println(dot(f(x),w)/pi*13/12)
+
 	 end
+
 
 References:
  
