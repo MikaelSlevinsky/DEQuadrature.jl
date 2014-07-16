@@ -16,25 +16,25 @@ the use of the Julia package Ipopt for solving the nonlinear program.
 Example.
 
 
-julia> using DEQuadrature
+	using DEQuadrature
 
 
 Suppose we are interested in calculating the integral of:
 
 
-julia> f(x) = 1.0./((x.+0.5).^2.+1.0.^2)./((x.-0.5).^2.+0.5.^2)
+	f(x) = 1.0./((x.+0.5).^2.+1.0.^2)./((x.-0.5).^2.+0.5.^2)
 
 
 on the real line to high accuracy (which equals 12pi/13). We start by recording the singularities:
 
 
-julia> z = [complex(BigFloat("-0.5"),BigFloat("1.0")),complex(BigFloat("0.5"),BigFloat("0.5"))]
+	z = [complex(BigFloat("-0.5"),BigFloat("1.0")),complex(BigFloat("0.5"),BigFloat("0.5"))]
 
 
 and we use the package function DENodesAndWeights to calculate nodes and weights. With these, we use the BLAS function dot to calculate the quadrature. This is looped over a geometrically increasing order:
 
 
-julia> for i = 1:10
+	for i = 1:10
 
 		@time x,w = DENodesAndWeights(z,2^i;digits=200,domain=Infinite);
 
