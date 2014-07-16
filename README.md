@@ -35,11 +35,8 @@ and we use the package function DENodesAndWeights to calculate nodes and weights
 
 
 	for i = 1:10
-
 		@time x,w = DENodesAndWeights(z,2^i;digits=200,domain=Infinite);
-
 		println(dot(f(x),w)/pi*13/12)
-
 	 end
 
 
