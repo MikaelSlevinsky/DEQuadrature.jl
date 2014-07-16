@@ -69,9 +69,9 @@ function DENodesAndWeights{T<:Number}(z::Array{Complex{T},1},n::Integer;digits::
 	gaopt = one(T)
 		
 	hs = log(2*convert(T,pi)*dDEopt*gaopt*n/b2opt)/gaopt/n
-	hsk=linspace(-hs*n,hs*n,2n+1);hhsk=hfast(hsk,u0,u)
+	hsk=linspace(-hs*n,hs*n,2n+1);hhsk=hfast(hsk,u0,u)#hhsk=h(hsk,u0,u)
 
-	x,w = domain.psi(hhsk),hs*domain.psip(hhsk).*hpfast(hsk,u0,u)
+	x,w = domain.psi(hhsk),hs*domain.psip(hhsk).*hpfast(hsk,u0,u)#hp(hsk,u0,u)
 	return x,w
 end
 
@@ -103,9 +103,9 @@ function DENodesAndWeights{T<:Number}(u0::T,u::Array{T,1},n::Integer;digits::Int
 	gaopt = one(T)
 		
 	hs = log(2*convert(T,pi)*dDEopt*gaopt*n/b2opt)/gaopt/n
-	hsk=linspace(-hs*n,hs*n,2n+1);hhsk=hfast(hsk,u0,u)
+	hsk=linspace(-hs*n,hs*n,2n+1);hhsk=hfast(hsk,u0,u)#hhsk=h(hsk,u0,u)
 
-	x,w = domain.psi(hhsk),hs*domain.psip(hhsk).*hpfast(hsk,u0,u)
+	x,w = domain.psi(hhsk),hs*domain.psip(hhsk).*hpfast(hsk,u0,u)#hp(hsk,u0,u)
 	return x,w
 end
 
@@ -182,13 +182,19 @@ function h{T<:Number}(t::T,u0::T,u::Array{T,1})
 	nu = length(u)
 	u0*sinh(t) + dot(u,t.^[0:nu-1])
 end
-h{T<:Number}(t::Array{T,1},u0::T,u::Array{T,1}) = [h(t[i],u0,u) for i=1:length(t)]
+function h{T<:Number}(t::Array{T,1},u0::T,u::Array{T,1})
+	nu = length(u)
+	u0*sinh(t) .+ t.^([0:nu-1]')*u
+end
 
 function hp{T<:Number}(t::T,u0::T,u::Array{T,1})
 	nu = length(u)
 	u0*cosh(t) + dot(u[2:nu],[1:nu-1].*t.^[0:nu-2])
 end
-hp{T<:Number}(t::Array{T,1},u0::T,u::Array{T,1}) = [hp(t[i],u0,u) for i=1:length(t)]
+function hp{T<:Number}(t::Array{T,1},u0::T,u::Array{T,1})
+	nu = length(u)
+	u0*cosh(t) .+ t.^([0:nu-2]')*([1:nu-1].*u[2:nu])
+end
 
 function hfast{T<:Number}(t::Array{T,1},u0::T,u::Array{T,1})
 	nu,ntm1d2 = length(u),int((length(t)-1)/2)
