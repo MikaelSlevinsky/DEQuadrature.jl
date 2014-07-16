@@ -39,8 +39,7 @@ Infinite = Domain(t->sinh(t),t->asinh(t),t->cosh(t))
 SemiInfinite1 = Domain(t->log(exp(t)+1),t->log(exp(t)-1),t->1./(1+exp(-t)))
 SemiInfinite2 = Domain(t->exp(t),t->log(t),t->exp(t))
 
-function DENodesAndWeights{T<:Number}(z::Array{Complex{T},1},n::Integer;digits::Integer=77
-			,domain::Domain=Finite,Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+function DENodesAndWeights{T<:Number}(z::Array{Complex{T},1},n::Integer;digits::Integer=77,domain::Domain=Finite,Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
 	#
 	# On entry:
 	#
@@ -63,9 +62,7 @@ function DENodesAndWeights{T<:Number}(z::Array{Complex{T},1},n::Integer;digits::
 		set_bigfloat_precision(bits)
 	end
 
-	psiinvz = domain.psiinv(z)
-	dat,ept = real(psiinvz),imag(psiinvz)
-	u0,u,xpre = DEMapValues(dat,ept,Hint,obj_scaling_factor)
+	u0,u,xpre = DEMapValues(z;digits=digits,domain=domain,Hint=Hint,obj_scaling_factor=obj_scaling_factor)
 	
 	b2opt = u0
 	dDEopt = convert(T,pi)/2
@@ -78,12 +75,50 @@ function DENodesAndWeights{T<:Number}(z::Array{Complex{T},1},n::Integer;digits::
 	return x,w
 end
 
-function DEMapValues{T<:Number}(datin::Array{T,1},eptin::Array{T,1},Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+function DENodesAndWeights{T<:Number}(u0::T,u::Array{T,1},n::Integer;digits::Integer=77,domain::Domain=Finite,Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
 	#
 	# On entry:
 	#
-	# datin, eptin are arrays of the real and imaginary parts
-	# of the singularities of the integrand after an outer transformation psi,
+	# u0,u are the predetermined map values, and
+	# n determines the number of quadrature nodes and weights (2n+1).
+	#
+	# Optionally:
+	#
+	# digits controls the precision of BigFloat,
+	# domain specifies the domain, with the default set to Finite,
+	# Hint controls the homotopy solution process for the nonlinear program, and
+	# obj_scaling_factor controls the scaling of the objective function.
+	#
+	# On return:
+	#
+	# x, w are the nodes and weights of the double exponential quadrature.
+	#
+	if T <: BigFloat
+		bits = convert(Int64,ceil(digits*log2(10)))
+		set_bigfloat_precision(bits)
+	end
+	
+	b2opt = u0
+	dDEopt = convert(T,pi)/2
+	gaopt = one(T)
+		
+	hs = log(2*convert(T,pi)*dDEopt*gaopt*n/b2opt)/gaopt/n
+	hsk=linspace(-hs*n,hs*n,2n+1);hhsk=hfast(hsk,u0,u)
+
+	x,w = domain.psi(hhsk),hs*domain.psip(hhsk).*hpfast(hsk,u0,u)
+	return x,w
+end
+
+function DEMapValues{T<:Number}(z::Array{Complex{T},1};digits::Integer=77,domain::Domain=Finite,Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+	#
+	# On entry:
+	#
+	# z is an array of singular points of the integrand.
+	#
+	# Optionally:
+	#
+	# digits controls the precision of BigFloat,
+	# domain specifies the domain, with the default set to Finite,
 	# Hint controls the homotopy solution process for the nonlinear program, and
 	# obj_scaling_factor controls the scaling of the objective function.
 	#
@@ -92,9 +127,15 @@ function DEMapValues{T<:Number}(datin::Array{T,1},eptin::Array{T,1},Hint::Intege
 	# u0 and u are the parameters of the map h(t) in Eq. (3.14), and
 	# x are the x-coordinates of the pre-images x +/- i pi/2 of the singularities.
 	#
-	global n = length(datin) == length(eptin) ? length(datin) : error("The lengths of the singularity arrays are different.")
-	global dat = convert(Array{Float64,1},datin)
-	global ept = convert(Array{Float64,1},eptin)
+	if T <: BigFloat
+		bits = convert(Int64,ceil(digits*log2(10)))
+		set_bigfloat_precision(bits)
+	end
+
+	psiinvz = domain.psiinv(z)
+	global n = length(z)
+	global dat = convert(Array{Float64,1},real(psiinvz))
+	global ept = convert(Array{Float64,1},imag(psiinvz))
 
 	x_U = [fill(30.0,n),fill(10.0,n)]
 	x_L = -x_U

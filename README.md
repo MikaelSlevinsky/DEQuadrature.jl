@@ -31,11 +31,12 @@ on the real line to high accuracy (which equals 12pi/13). We start by recording 
 	z = [complex(BigFloat("-0.5"),BigFloat("1.0")),complex(BigFloat("0.5"),BigFloat("0.5"))]
 
 
-and we use the package function DENodesAndWeights to calculate nodes and weights. With these, we use the BLAS function dot to calculate the quadrature. This is looped over a geometrically increasing order:
+and we use the package function DEMapValues to calculate the optimized map and the function DENodesAndWeights to calculate nodes and weights. Looping over a geometrically increasing order, we can approximate the integral very accurately:
 
 
+	u0,u,xpre = DEMapValues(z;digits=200,domain=Infinite)
 	for i = 1:10
-		@time x,w = DENodesAndWeights(z,2^i;digits=200,domain=Infinite);
+		x,w = DENodesAndWeights(u0,u,2^i;digits=200,domain=Infinite);
 		println(dot(f(x),w)/pi*13/12)
 	 end
 
