@@ -13,7 +13,7 @@ The secondary function of this module computes the parameters of the
 conformal map h(t) in Eq. (3.14) of the reference [1]. This module requires
 the use of the Julia package Ipopt for solving the nonlinear program.
 
-Example.
+Example
 
 
 	using DEQuadrature
