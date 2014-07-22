@@ -34,12 +34,13 @@ type Domain
 	psip::Function
 end
 
-Finite = Domain(t->tanh(t),t->atanh(t),t->sech(t).^2)
+#For functions on a Finite domain with algebraic and logarithmic endpoint singularities, use the numbers α, β, γ, and δ to compute the singularities in a stable way.
+Finite{T<:Number}(α::T,β::T,γ::T,δ::T) = Domain(t->tanh(t),t->atanh(t),t->sech(t).^2.*(2./(exp(2t).+1)).^α.*(2./(exp(-2t).+1)).^β.*log(2./(exp(2t).+1)).^γ.*log(2./(exp(-2t).+1)).^δ)
 Infinite = Domain(t->sinh(t),t->asinh(t),t->cosh(t))
 SemiInfinite1 = Domain(t->log(exp(t)+1),t->log(exp(t)-1),t->1./(1+exp(-t)))
 SemiInfinite2 = Domain(t->exp(t),t->log(t),t->exp(t))
 
-function DENodesAndWeights{T<:Number}(z::Array{Complex{T},1},n::Integer;digits::Integer=77,domain::Domain=Finite,Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+function DENodesAndWeights{T<:Number}(z::Array{Complex{T},1},n::Integer;digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
 	#
 	# On entry:
 	#
@@ -75,7 +76,7 @@ function DENodesAndWeights{T<:Number}(z::Array{Complex{T},1},n::Integer;digits::
 	return x,w
 end
 
-function DENodesAndWeights{T<:Number}(u0::T,u::Array{T,1},n::Integer;digits::Integer=77,domain::Domain=Finite,Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+function DENodesAndWeights{T<:Number}(u0::T,u::Array{T,1},n::Integer;digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
 	#
 	# On entry:
 	#
@@ -109,7 +110,7 @@ function DENodesAndWeights{T<:Number}(u0::T,u::Array{T,1},n::Integer;digits::Int
 	return x,w
 end
 
-function DEMapValues{T<:Number}(z::Array{Complex{T},1};digits::Integer=77,domain::Domain=Finite,Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+function DEMapValues{T<:Number}(z::Array{Complex{T},1};digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
 	#
 	# On entry:
 	#
