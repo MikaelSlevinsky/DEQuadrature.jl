@@ -1,6 +1,6 @@
 # DEQuadrature
 
-A module by Richard Mikaël Slevinsky,
+A module by Richard MikaÃ«l Slevinsky,
 Department of Mathematical & Statistical Sciences,
 University of Alberta, July 2014.
 
@@ -77,7 +77,7 @@ we are interested in calculating the integral of:
 	f(x) = x./sqrt((x.-z[1].re).^2.+z[1].im.^2)./((x.-z[2].re).^2.+z[2].im.^2)./((x.-z[3].re).^2.+z[3].im.^2)
 
 
-on [0,�). We use the package functions SincPade and PolyRoots to compute the approximate locations of the singularities adaptively. Then, we use the package function DEMapValues to calculate the optimized map and the function DENodesAndWeights to calculate nodes and weights. Looping over a geometrically increasing order, we can approximate the integral very accurately:
+on [0,∞). We use the package functions SincPade and PolyRoots to compute the approximate locations of the singularities adaptively. Then, we use the package function DEMapValues to calculate the optimized map and the function DENodesAndWeights to calculate nodes and weights. Looping over a geometrically increasing order, we can approximate the integral very accurately:
 
 
 	u0,u = big(pi)/BigFloat("2.0"),zeros(BigFloat,3);
