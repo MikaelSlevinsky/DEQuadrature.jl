@@ -25,6 +25,9 @@ using Ipopt
 export DENodesAndWeights,DEMapValues
 export Domain,Finite,Infinite,SemiInfinite1,SemiInfinite2
 
+include("SincPade.jl")
+export SincPade,PadeVal,PolyRoots
+
 #
 # The type Domain is used to select from the outer maps (3.9)--(3.12).
 #
@@ -136,7 +139,7 @@ function DEMapValues{T<:Number}(z::Array{Complex{T},1};digits::Integer=77,domain
 	psiinvz = domain.psiinv(z)
 	global n = length(z)
 	global dat = convert(Array{Float64,1},real(psiinvz))
-	global ept = convert(Array{Float64,1},imag(psiinvz))
+	global ept = convert(Array{Float64,1},abs(imag(psiinvz)))
 
 	x_U = [fill(30.0,n),fill(10.0,n)]
 	x_L = -x_U
