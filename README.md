@@ -17,7 +17,7 @@ the use of the Julia package Ipopt for solving the nonlinear program.
 	using DEQuadrature
 
 
-## Example 4.1 from [1]
+### Example 4.1 from [1]
 
 Suppose with the singularities:
 
