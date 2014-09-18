@@ -41,7 +41,7 @@ on [-1,1] with a square root singularity at the left endpoint, and a logarithmic
 	end
 
 
-Example 4.2 from [1]
+### Example 4.2 from [1]
 
 The package has equal support for BigFloats, making high precision calculations a breeze! Suppose with the singularities:
 
@@ -65,7 +65,7 @@ on the real line. We use the package function DEMapValues to calculate the optim
 	end
 
 
-Example 4.4 from [1]
+### Example 4.4 from [1]
 
 Suppose with the singularities:
 
