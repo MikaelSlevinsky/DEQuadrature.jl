@@ -1,6 +1,6 @@
 # DEQuadrature
 
-A module by Richard MikaÃ«l Slevinsky,
+A module by Richard Mikaël Slevinsky,
 Department of Mathematical & Statistical Sciences,
 University of Alberta, July 2014.
 
@@ -81,24 +81,22 @@ on [0,∞). We use the package functions SincPade and PolyRoots to compute the a
 
 
 	u0,u = big(pi)/BigFloat("2.0"),zeros(BigFloat,3);
-	x,fve = zeros(BigFloat,5),zeros(BigFloat,5);
+	x = zeros(BigFloat,5);
 	for i = 1:4
 		x,w = DENodesAndWeights(u0,u,2^i;digits=100,domain=SemiInfinite2);
-		fve = f(x);
-		println(dot(fve,w))
+		println(dot(f(x),w))
 	end
 	for i = 5:8
-		(p,q) = SincPade(fve,x,(length(fve)-1)/2,i-2,i+2);
+		(p,q) = SincPade(f(x),x,(length(x)-1)/2,i-2,i+2);
 		rootvec = PolyRoots(q);
 		x,w = DENodesAndWeights(convert(Array{Complex{BigFloat},1},rootvec[end-4:2:end]),2^i;digits=100,domain=SemiInfinite2,Hint=25);
-		fve = f(x);
-		println(dot(fve,w))
+		println(dot(f(x),w))
 	end
 
 
 
 
-References:
+# References:
 
  
    1.	R. M. Slevinsky and S. Olver. On the use of conformal maps
