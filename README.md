@@ -36,7 +36,7 @@ on [-1,1] with a square root singularity at the left endpoint, and a logarithmic
 
 	u0,u,xpre = DEMapValues(z;domain=Finite(0.0,-0.5,1.0,0.0))
 	for i = 1:6
-		x,w = DENodesAndWeights(u0,u,2^i,domain=Finite(0.0,-0.5,1.0,0.0));
+		x,w = DENodesAndWeights(u0,u,2^i;domain=Finite(0.0,-0.5,1.0,0.0));
 		println(dot(f(x),w))
 	end
 
