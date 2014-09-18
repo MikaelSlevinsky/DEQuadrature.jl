@@ -22,7 +22,7 @@ Example 4.1 from [1]
 Suppose with the singularities:
 
 
-	z = [complex(BigFloat("-0.5"),BigFloat("1.0")),complex(BigFloat("0.5"),BigFloat("0.5"))]
+	z = [complex(-0.5,1.0),complex(0.5,0.5)]
 
 
 we are interested in calculating the integral of:
@@ -30,18 +30,20 @@ we are interested in calculating the integral of:
 
 	f(x) = exp(1./((x.-z[1].re).^2.+z[1].im.^2))./((x.-z[2].re).^2.+z[2].im.^2)
 
+
 on [-1,1] with a square root singularity at the left endpoint, and a logarithmic singularity at the right endpoint. We use the package function DEMapValues to calculate the optimized map and the function DENodesAndWeights to calculate nodes and weights. Looping over a geometrically increasing order, we can approximate the integral very accurately:
 
 
-	u0,u,xpre = DEMapValues(z;digits=100,domain=Finite(BigFloat("0.0"),BigFloat("-0.5"),BigFloat("1.0"),BigFloat("0.0")))
-	for i = 1:8
-		x,w = DENodesAndWeights(u0,u,2^i;digits=100,domain=Finite(BigFloat("0.0"),BigFloat("-0.5"),BigFloat("1.0"),BigFloat("0.0")));
+	u0,u,xpre = DEMapValues(z;domain=Finite(0.0,-0.5,1.0,0.0))
+	for i = 1:6
+		x,w = DENodesAndWeights(u0,u,2^i,domain=Finite(0.0,-0.5,1.0,0.0));
 		println(dot(f(x),w))
 	end
 
+
 Example 4.2 from [1]
 
-Suppose with the singularities:
+The package has equal support for BigFloats, making high precision calculations a breeze! Suppose with the singularities:
 
 
 	z = [complex(BigFloat("-2.0"),BigFloat("1.0")),complex(BigFloat("-1.0"),BigFloat("0.5")),complex(BigFloat("1.0"),BigFloat("0.25")),complex(BigFloat("2.0"),BigFloat("1.0"))]
