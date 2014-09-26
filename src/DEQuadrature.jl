@@ -76,7 +76,8 @@ function DENodesAndWeights{T<:Number}(z::Array{Complex{T},1},n::Integer;digits::
 	hsk=linspace(-hs*n,hs*n,2n+1);hhsk=hfast(hsk,u0,u)#hhsk=h(hsk,u0,u)
 
 	x,w = domain.psi(hhsk),hs*domain.psip(hhsk).*hpfast(hsk,u0,u)#hp(hsk,u0,u)
-	return x,w
+	cutoff = !isinf(x).*!isnan(x).*!isinf(w).*!isnan(w)
+	return x[cutoff],w[cutoff]
 end
 
 function DENodesAndWeights{T<:Number}(u0::T,u::Array{T,1},n::Integer;digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
@@ -110,7 +111,8 @@ function DENodesAndWeights{T<:Number}(u0::T,u::Array{T,1},n::Integer;digits::Int
 	hsk=linspace(-hs*n,hs*n,2n+1);hhsk=hfast(hsk,u0,u)#hhsk=h(hsk,u0,u)
 
 	x,w = domain.psi(hhsk),hs*domain.psip(hhsk).*hpfast(hsk,u0,u)#hp(hsk,u0,u)
-	return x,w
+	cutoff = !isinf(x).*!isnan(x).*!isinf(w).*!isnan(w)
+	return x[cutoff],w[cutoff]
 end
 
 function DEMapValues{T<:Number}(z::Array{Complex{T},1};digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
