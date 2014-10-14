@@ -43,7 +43,7 @@ Infinite = Domain(t->sinh(t),t->asinh(t),t->cosh(t))
 SemiInfinite1 = Domain(t->log(exp(t)+1),t->log(exp(t)-1),t->1./(1+exp(-t)))
 SemiInfinite2 = Domain(t->exp(t),t->log(t),t->exp(t))
 
-function DENodesAndWeights{T<:Number}(z::Array{Complex{T},1},n::Integer;digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+function DENodesAndWeights{T<:Number}(z::Array{Complex{T},1},n::Integer,gam::T;digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
 	#
 	# On entry:
 	#
@@ -66,11 +66,11 @@ function DENodesAndWeights{T<:Number}(z::Array{Complex{T},1},n::Integer;digits::
 		set_bigfloat_precision(bits)
 	end
 
-	u0,u,xpre = DEMapValues(z;digits=digits,domain=domain,Hint=Hint,obj_scaling_factor=obj_scaling_factor)
+	u0,u,xpre = DEMapValues(z,gam;digits=digits,domain=domain,Hint=Hint,obj_scaling_factor=obj_scaling_factor)
 	
 	b2opt = u0
-	dDEopt = convert(T,pi)/2
-	gaopt = one(T)
+	dDEopt = convert(T,pi)/2gam
+	gaopt = gam
 		
 	hs = log(2*convert(T,pi)*dDEopt*gaopt*n/b2opt)/gaopt/n
 	hsk=linspace(-hs*n,hs*n,2n+1);hhsk=hfast(hsk,u0,u)#hhsk=h(hsk,u0,u)
@@ -80,7 +80,7 @@ function DENodesAndWeights{T<:Number}(z::Array{Complex{T},1},n::Integer;digits::
 	return x[cutoff],w[cutoff]
 end
 
-function DENodesAndWeights{T<:Number}(u0::T,u::Array{T,1},n::Integer;digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+function DENodesAndWeights{T<:Number}(u0::T,u::Array{T,1},n::Integer,gam::T;digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
 	#
 	# On entry:
 	#
@@ -104,8 +104,8 @@ function DENodesAndWeights{T<:Number}(u0::T,u::Array{T,1},n::Integer;digits::Int
 	end
 	
 	b2opt = u0
-	dDEopt = convert(T,pi)/2
-	gaopt = one(T)
+	dDEopt = convert(T,pi)/2/gam
+	gaopt = gam
 		
 	hs = log(2*convert(T,pi)*dDEopt*gaopt*n/b2opt)/gaopt/n
 	hsk=linspace(-hs*n,hs*n,2n+1);hhsk=hfast(hsk,u0,u)#hhsk=h(hsk,u0,u)
@@ -115,7 +115,7 @@ function DENodesAndWeights{T<:Number}(u0::T,u::Array{T,1},n::Integer;digits::Int
 	return x[cutoff],w[cutoff]
 end
 
-function DEMapValues{T<:Number}(z::Array{Complex{T},1};digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+function DEMapValues{T<:Number}(z::Array{Complex{T},1},gam::T;digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
 	#
 	# On entry:
 	#
@@ -131,7 +131,7 @@ function DEMapValues{T<:Number}(z::Array{Complex{T},1};digits::Integer=77,domain
 	# On return:
 	#
 	# u0 and u are the parameters of the map h(t) in Eq. (3.14), and
-	# x are the x-coordinates of the pre-images x +/- i pi/2 of the singularities.
+	# x are the x-coordinates of the pre-images x +/- i pi/2/gam of the singularities.
 	#
 	if T <: BigFloat
 		bits = convert(Int64,ceil(digits*log2(10)))
@@ -142,6 +142,8 @@ function DEMapValues{T<:Number}(z::Array{Complex{T},1};digits::Integer=77,domain
 	global n = length(z)
 	global dat = convert(Array{Float64,1},real(psiinvz))
 	global ept = convert(Array{Float64,1},abs(imag(psiinvz)))
+	global gaopt = gam
+	global Shift = sin(pi/2gaopt)
 
 	x_U = [fill(30.0,n),fill(10.0,n)]
 	x_L = -x_U
@@ -204,12 +206,12 @@ end
 
 function hfast{T<:Number}(t::Array{T,1},u0::T,u::Array{T,1})
 	nu,ntm1d2 = length(u),int((length(t)-1)/2)
-	schrec(ntm1d2,zero(T),u0*sinh(t[ntm1d2+2]),2cosh(t[ntm1d2+2])) .+ t.^([0:nu-1]')*u
+	schrec(ntm1d2,zero(T),u0*sinh(t[ntm1d2+2]),2cosh(t[ntm1d2+2]))*Shift .+ t.^([0:nu-1]')*u
 end
 
 function hpfast{T<:Number}(t::Array{T,1},u0::T,u::Array{T,1})
 	nu,ntm1d2 = length(u),int((length(t)-1)/2)
-	schrec(ntm1d2,u0,u0*cosh(t[ntm1d2+2]),2cosh(t[ntm1d2+2])) .+ t.^([0:nu-2]')*([1:nu-1].*u[2:nu])
+	schrec(ntm1d2,u0,u0*cosh(t[ntm1d2+2]),2cosh(t[ntm1d2+2]))*Shift .+ t.^([0:nu-2]')*([1:nu-1].*u[2:nu])
 end
 
 function schrec{T<:Number}(nt::Integer,v1::T,v2::T,v3::T)
@@ -233,10 +235,10 @@ function eval_f(x)
   for k=1:n
 	temp3=0.0
 	for j=1:n
-		temp3+=x[n+j]*complex(x[k],pi/2)^(j-1)
+		temp3+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
 	end
 	temp1+=ept[k]-imag(temp3)
-	temp2+=cosh(x[k])
+	temp2+=cosh(x[k])*Shift
   end
   return temp1/temp2
 end
@@ -249,10 +251,10 @@ function eval_g(x, g)
   for k=1:n
 	temp1=0.0
 	for j=1:n
-		temp1+=x[n+j]*complex(x[k],pi/2)^(j-1)
+		temp1+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
 	end
 	g[k] = real(temp1)-dat[k]
-	g[n+k] = f - (ept[k] - imag(temp1))/cosh(x[k])
+	g[n+k] = f - (ept[k] - imag(temp1))/(cosh(x[k])*Shift)
   end
   g[2n] = x[1] + x[n]
 end
@@ -270,12 +272,12 @@ function eval_grad_f(x, grad_f)
 	for k=1:n
 		temp3=0.0
 		for j=1:n
-			temp3+=x[n+j]*complex(x[k],pi/2)^(j-1)
+			temp3+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
 		end
 		temp1+=ept[k]-imag(temp3)
-		temp2+=cosh(x[k])
-		temp4+=x[n+k]*(k-1)*complex(x[r],pi/2)^(k-2)
-		temp5+=complex(x[k],pi/2)^(r-1)
+		temp2+=cosh(x[k])*Shift
+		temp4+=x[n+k]*(k-1)*complex(x[r],pi/2gaopt)^(k-2)
+		temp5+=complex(x[k],pi/2gaopt)^(r-1)
 	end
 	grad_f[r] = -(temp2*imag(temp4) + sinh(x[r])*temp1)/temp2^2
 	grad_f[n+r] = -imag(temp5)/temp2
@@ -305,19 +307,19 @@ function eval_jac_g(x, mode, rows, cols, values)
 			values[2n^2+2n*(k-1)+r]=grad_f[r]
 			values[2n^2+2n*(k-1)+n+r]=grad_f[n+r]
 			
-			temp1+=x[n+r]*(r-1)*complex(x[k],pi/2)^(r-2)
-			values[2n*(k-1)+n+r] = real(complex(x[k],pi/2)^(r-1))
+			temp1+=x[n+r]*(r-1)*complex(x[k],pi/2gaopt)^(r-2)
+			values[2n*(k-1)+n+r] = real(complex(x[k],pi/2gaopt)^(r-1))
 			
-			temp2+=x[n+r]*complex(x[k],pi/2)^(r-1)
+			temp2+=x[n+r]*complex(x[k],pi/2gaopt)^(r-1)
 			
 			temp3=0.0
 			for j=1:n
-				temp3+=x[n+j]*complex(x[k],pi/2)^(j-1)
+				temp3+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
 			end
-			values[2n^2+2n*(k-1)+n+r] += imag(complex(x[k],pi/2)^(r-1))/cosh(x[k])
+			values[2n^2+2n*(k-1)+n+r] += imag(complex(x[k],pi/2gaopt)^(r-1))/(cosh(x[k])*Shift)
 		end
 		values[2n*(k-1)+k] = real(temp1)
-		values[2n^2+2n*(k-1)+k] += ((ept[k]-imag(temp2))*sinh(x[k])+cosh(x[k])*imag(temp1))/cosh(x[k])^2
+		values[2n^2+2n*(k-1)+k] += ((ept[k]-imag(temp2))*sinh(x[k])+cosh(x[k])*Shift*imag(temp1))/(cosh(x[k])*Shift)^2
 	
 	end
 	for k =1:n
