@@ -22,8 +22,8 @@ module DEQuadrature
 #
 using Ipopt
 
-export DENodesAndWeights,DEMapValues
-export Domain,Finite,Infinite,SemiInfinite1,SemiInfinite2
+export DENodesAndWeights,DEMapValues,Domain
+export Finite,Infinite1,Infinite2,SemiInfinite1,SemiInfinite2
 
 include("SincPade.jl")
 export SincPade,PadeVal,PolyRoots
@@ -38,10 +38,11 @@ type Domain
 end
 
 #For functions on a Finite domain with algebraic and logarithmic endpoint singularities, use the numbers α, β, γ, and δ to compute the singularities in a stable way.
-Finite(α::Number,β::Number,γ::Number,δ::Number) = Domain(t->tanh(t),t->atanh(t),t->sech(t).^2.*(2./(exp(-2t).+1)).^α.*(2./(exp(2t).+1)).^β.*log(2./(exp(-2t).+1)).^γ.*log(2./(exp(2t).+1)).^δ)
-Infinite = Domain(t->sinh(t),t->asinh(t),t->cosh(t))
+Finite(α::Number,β::Number,γ::Number,δ::Number) = Domain(tanh,atanh,t->sech(t).^2.*(2./(exp(-2t).+1)).^α.*(2./(exp(2t).+1)).^β.*log(2./(exp(-2t).+1)).^γ.*log(2./(exp(2t).+1)).^δ)
+Infinite1 = Domain(sinh,asinh,cosh)
+Infinite2 = Domain(identity,identity,one)
 SemiInfinite1 = Domain(t->log(exp(t)+1),t->log(exp(t)-1),t->1./(1+exp(-t)))
-SemiInfinite2 = Domain(t->exp(t),t->log(t),t->exp(t))
+SemiInfinite2 = Domain(exp,log,exp)
 
 function DENodesAndWeights{T<:Number}(u0::T,u::Vector{T},n::Integer;ga::T=one(T),digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
 	#

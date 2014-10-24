@@ -8,7 +8,7 @@ z = [complex(-0.5,1.0),complex(0.5,0.5)]
 
 u0,u,xpre = DEMapValues(z;domain=Finite(-0.5,0.0,0.0,1.0))
 for i = 1:6
-	x,w = DENodesAndWeights(u0,u,2^i;domain=Finite(-0.5,0.0,0.0,1.0));
+	x,w = DENodesAndWeights(u0,u,2^i;domain=Finite(-0.5,0.0,0.0,1.0))
 	val = dot(f(x),w)
 	err = abs(val-convert(Float64,BigFloat(DEQuadrature.example4p1)))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
@@ -21,9 +21,9 @@ println("Testing Example 4.2")
 f(x) = exp(10./((x.-z[1].re).^2.+z[1].im.^2)).*cos(10./((x.-z[2].re).^2.+z[2].im.^2))./((x.-z[3].re).^2.+z[3].im.^2)./sqrt((x.-z[4].re).^2.+z[4].im.^2)
 z = [complex(BigFloat("-2.0"),BigFloat("1.0")),complex(BigFloat("-1.0"),BigFloat("0.5")),complex(BigFloat("1.0"),BigFloat("0.25")),complex(BigFloat("2.0"),BigFloat("1.0"))]
 
-u0,u,xpre = DEMapValues(z;digits=100,domain=Infinite)
+u0,u,xpre = DEMapValues(z;digits=100,domain=Infinite1)
 for i = 1:10
-	x,w = DENodesAndWeights(u0,u,2^i;digits=100,domain=Infinite);
+	x,w = DENodesAndWeights(u0,u,2^i;digits=100,domain=Infinite1)
 	val = dot(f(x),w)
 	err = abs(val-BigFloat(DEQuadrature.example4p2))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
@@ -38,7 +38,7 @@ z = [complex(BigFloat("1.0"),BigFloat("1.0")),complex(BigFloat("2.0"),BigFloat("
 
 x = zeros(BigFloat,5);
 for i = 1:4
-	x,w = DENodesAndWeights(Complex{BigFloat}[],2^i;digits=100,domain=SemiInfinite2);
+	x,w = DENodesAndWeights(Complex{BigFloat}[],2^i;digits=100,domain=SemiInfinite2)
 	val = dot(f(x),w)
 	err = abs(val-BigFloat(DEQuadrature.example4p4))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
@@ -46,7 +46,7 @@ end
 for i = 5:8
 	(p,q) = SincPade(f(x),x,(length(x)-1)/2,i-2,i+2);
 	rootvec = PolyRoots(q);
-	x,w = DENodesAndWeights(convert(Vector{Complex{BigFloat}},rootvec[end-4:2:end]),2^i;digits=100,domain=SemiInfinite2,Hint=25);
+	x,w = DENodesAndWeights(convert(Vector{Complex{BigFloat}},rootvec[end-4:2:end]),2^i;digits=100,domain=SemiInfinite2,Hint=25)
 	val = dot(f(x),w)
 	err = abs(val-BigFloat(DEQuadrature.example4p4))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))

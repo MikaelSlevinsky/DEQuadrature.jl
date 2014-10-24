@@ -36,7 +36,7 @@ as well as a square root singularity at the left endpoint and a logarithmic sing
 
 	u0,u,xpre = DEMapValues(z;domain=Finite(-0.5,0.0,0.0,1.0))
 	for i = 1:6
-		x,w = DENodesAndWeights(u0,u,2^i;domain=Finite(-0.5,0.0,0.0,1.0));
+		x,w = DENodesAndWeights(u0,u,2^i;domain=Finite(-0.5,0.0,0.0,1.0))
 		val = dot(f(x),w)
 		err = abs(val-convert(Float64,BigFloat(DEQuadrature.example4p1)))
 		println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
@@ -60,9 +60,9 @@ on the real line with the singularities:
 We use the package function DEMapValues to calculate the optimized map and the function DENodesAndWeights to calculate nodes and weights. Looping over a geometrically increasing order, we can approximate the integral very accurately:
 
 
-	u0,u,xpre = DEMapValues(z;digits=100,domain=Infinite)
+	u0,u,xpre = DEMapValues(z;digits=100,domain=Infinite1)
 	for i = 1:10
-		x,w = DENodesAndWeights(u0,u,2^i;digits=100,domain=Infinite);
+		x,w = DENodesAndWeights(u0,u,2^i;digits=100,domain=Infinite1)
 		val = dot(f(x),w)
 		err = abs(val-BigFloat(DEQuadrature.example4p2))
 		println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
@@ -88,7 +88,7 @@ We use the package functions SincPade and PolyRoots to compute the approximate l
 
 	x = zeros(BigFloat,5);
 	for i = 1:4
-		x,w = DENodesAndWeights(Complex{BigFloat}[],2^i;digits=100,domain=SemiInfinite2);
+		x,w = DENodesAndWeights(Complex{BigFloat}[],2^i;digits=100,domain=SemiInfinite2)
 		val = dot(f(x),w)
 		err = abs(val-BigFloat(DEQuadrature.example4p4))
 		println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
@@ -96,7 +96,7 @@ We use the package functions SincPade and PolyRoots to compute the approximate l
 	for i = 5:8
 		(p,q) = SincPade(f(x),x,(length(x)-1)/2,i-2,i+2);
 		rootvec = PolyRoots(q);
-		x,w = DENodesAndWeights(convert(Vector{Complex{BigFloat}},rootvec[end-4:2:end]),2^i;digits=100,domain=SemiInfinite2,Hint=25);
+		x,w = DENodesAndWeights(convert(Vector{Complex{BigFloat}},rootvec[end-4:2:end]),2^i;digits=100,domain=SemiInfinite2,Hint=25)
 		val = dot(f(x),w)
 		err = abs(val-BigFloat(DEQuadrature.example4p4))
 		println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
