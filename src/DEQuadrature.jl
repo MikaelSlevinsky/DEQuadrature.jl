@@ -171,8 +171,6 @@ function h{T<:Real}(t,u0::T,u::Vector{T})
 	end
 	return ret
 end
-h{T<:Real}(t,u0::T,u::Vector{None}) = h(t,u0,[zero(T)])
-
 function hp{T<:Real}(t,u0::T,u::Vector{T})
 	nu = length(u)
 	ret = u0*cosh(t)
@@ -183,19 +181,15 @@ function hp{T<:Real}(t,u0::T,u::Vector{T})
 	end
 	return ret
 end
-hp{T<:Real}(t,u0::T,u::Vector{None}) = hp(t,u0,[zero(T)])
 
 function hfast{T<:Number}(t::Vector{T},u0::T,u::Vector{T})
 	nu,ntm1d2 = length(u),int((length(t)-1)/2)
 	schrec(ntm1d2,zero(T),u0*sinh(t[ntm1d2+2]),2cosh(t[ntm1d2+2])) .+ t.^([0:nu-1]')*u
 end
-hfast{T<:Number}(t::Vector{T},u0::T,u::Vector{None}) = hfast(t,u0,[zero(T)])
-
 function hpfast{T<:Number}(t::Vector{T},u0::T,u::Vector{T})
 	nu,ntm1d2 = length(u),int((length(t)-1)/2)
 	schrec(ntm1d2,u0,u0*cosh(t[ntm1d2+2]),2cosh(t[ntm1d2+2])) .+ t.^([0:nu-2]')*([1:nu-1].*u[2:nu])
 end
-hpfast{T<:Number}(t::Vector{T},u0::T,u::Vector{None}) = hpfast(t,u0,[zero(T)])
 
 function schrec{T<:Number}(nt::Integer,v1::T,v2::T,v3::T)
 	rec = Array(T,2nt+1)
