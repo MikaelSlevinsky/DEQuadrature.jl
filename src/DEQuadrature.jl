@@ -43,49 +43,12 @@ Infinite = Domain(t->sinh(t),t->asinh(t),t->cosh(t))
 SemiInfinite1 = Domain(t->log(exp(t)+1),t->log(exp(t)-1),t->1./(1+exp(-t)))
 SemiInfinite2 = Domain(t->exp(t),t->log(t),t->exp(t))
 
-function DENodesAndWeights{T<:Number}(z::Array{Complex{T},1},n::Integer;ga::T=one(T),digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
-	#
-	# On entry:
-	#
-	# z is an array of singular points of the integrand, and
-	# n determines the number of quadrature nodes and weights (2n+1).
-	#
-	# Optionally:
-	#
-	# digits controls the precision of BigFloat,
-	# domain specifies the domain, with the default set to Finite,
-	# Hint controls the homotopy solution process for the nonlinear program, and
-	# obj_scaling_factor controls the scaling of the objective function.
-	#
-	# On return:
-	#
-	# x, w are the nodes and weights of the double exponential quadrature.
-	#
-	if T <: BigFloat
-		bits = convert(Int64,ceil(digits*log2(10)))
-		set_bigfloat_precision(bits)
-	end
-
-	u0,u,xpre = DEMapValues(z;ga=ga,digits=digits,domain=domain,Hint=Hint,obj_scaling_factor=obj_scaling_factor)
-	
-	b2opt = u0
-	dDEopt = convert(T,pi)/2ga
-	gaopt = ga
-		
-	hs = log(2*convert(T,pi)*dDEopt*gaopt*n/b2opt)/gaopt/n
-	hsk=linspace(-hs*n,hs*n,2n+1);hhsk=hfast(hsk,u0,u)#hhsk=h(hsk,u0,u)
-
-	x,w = domain.psi(hhsk),hs*domain.psip(hhsk).*hpfast(hsk,u0,u)#hp(hsk,u0,u)
-	cutoff = !isinf(x).*!isnan(x).*!isinf(w).*!isnan(w)
-	return x[cutoff],w[cutoff]
-end
-
-function DENodesAndWeights{T<:Number}(u0::T,u::Array{T,1},n::Integer;ga::T=one(T),digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+function DENodesAndWeights{T<:Number}(u0::T,u::Vector{T},n::Integer;ga::T=one(T),digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
 	#
 	# On entry:
 	#
 	# u0,u are the predetermined map values, and
-	# n determines the number of quadrature nodes and weights (2n+1).
+	# n determines the number of quadrature nodes and weights (N = 2n+1).
 	#
 	# Optionally:
 	#
@@ -115,11 +78,19 @@ function DENodesAndWeights{T<:Number}(u0::T,u::Array{T,1},n::Integer;ga::T=one(T
 	return x[cutoff],w[cutoff]
 end
 
-function DEMapValues{T<:Number}(z::Array{Complex{T},1};ga::T=one(T),digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+function DENodesAndWeights{T<:Number}(z::Vector{Complex{T}},n::Integer;ga::T=one(T),digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+	u0,u,xpre = DEMapValues(z;ga=ga,digits=digits,domain=domain,Hint=Hint,obj_scaling_factor=obj_scaling_factor)
+	x,w = DENodesAndWeights(u0,u,n;ga=ga,digits=digits,domain=domain,Hint=Hint,obj_scaling_factor=obj_scaling_factor)
+	return x,w
+end
+
+function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
 	#
 	# On entry:
 	#
-	# z is an array of singular points of the integrand.
+	# z is a vector of singular points of the integrand.
+	# If the integrand has no complex singularities, then
+	# let z = Complex{T}[]::Vector{Complex{T}}, a vector of type Complex{T} with length 0.
 	#
 	# Optionally:
 	#
@@ -137,11 +108,17 @@ function DEMapValues{T<:Number}(z::Array{Complex{T},1};ga::T=one(T),digits::Inte
 		bits = convert(Int64,ceil(digits*log2(10)))
 		set_bigfloat_precision(bits)
 	end
+	if length(z) == 0
+		u0 = convert(T,pi)/2
+		u = zeros(T,1)
+		x = T[]
+		return u0,u,x
+	end
 
 	psiinvz = domain.psiinv(z)
 	global n = length(z)
-	global dat = convert(Array{Float64,1},real(psiinvz))
-	global ept = convert(Array{Float64,1},abs(imag(psiinvz)))
+	global dat = convert(Vector{Float64},real(psiinvz))
+	global ept = convert(Vector{Float64},abs(imag(psiinvz)))
 	global gaopt = ga
 
 	x_U = [fill(30.0,n),fill(10.0,n)]
@@ -176,8 +153,8 @@ function DEMapValues{T<:Number}(z::Array{Complex{T},1};ga::T=one(T),digits::Inte
 	end
 	
 	u0 = convert(T,prob.obj_val)
-	u = convert(Array{T,1},prob.x[n+1:2n])
-	x = convert(Array{T,1},prob.x[1:n])
+	u = convert(Vector{T},prob.x[n+1:2n])
+	x = convert(Vector{T},prob.x[1:n])
 	
 	return u0,u,x
 end
@@ -185,49 +162,40 @@ end
 #
 # These are auxiliary functions used to create the map h(t) in Eq. (3.14) and its derivative.
 #
-function h{T<:Real}(t::Union(T,Complex{T}),u0::T,u::Array{T,1})
-	nu = length(u)
-	u0*sinh(t) + dot(u,t.^[0:nu-1])
-end
-function h{T<:Real}(t::Union(Array{T,1},Array{Complex{T},1}),u0::T,u::Array{T,1})
-	nu = length(u)
-	u0*sinh(t) .+ t.^([0:nu-1]')*u
-end
-function h{T<:Real}(t,u0::T,u::Array{T,1})
+function h{T<:Real}(t,u0::T,u::Vector{T})
 	nu = length(u)
 	ret = u0*sinh(t)
+	Tone = one(T)
 	for j=1:nu
-		ret .+= u[j]*t.^(j-one(T))
+		ret .+= u[j]*t.^(j-Tone)
 	end
 	return ret
 end
+h{T<:Real}(t,u0::T,u::Vector{None}) = h(t,u0,[zero(T)])
 
-function hp{T<:Real}(t::Union(T,Complex{T}),u0::T,u::Array{T,1})
-	nu = length(u)
-	u0*cosh(t) + dot(u[2:nu],[1:nu-1].*t.^[0:nu-2])
-end
-function hp{T<:Real}(t::Union(Array{T,1},Array{Complex{T},1}),u0::T,u::Array{T,1})
-	nu = length(u)
-	u0*cosh(t) .+ t.^([0:nu-2]')*([1:nu-1].*u[2:nu])
-end
-function hp{T<:Real}(t,u0::T,u::Array{T,1})
+function hp{T<:Real}(t,u0::T,u::Vector{T})
 	nu = length(u)
 	ret = u0*cosh(t)
+	Tone = one(T)
+	Ttwo = 2Tone
 	for j=2:nu
-		ret .+= u[j]*(j-one(T))*t.^(j-2one(T))
+		ret .+= u[j]*(j-Tone)*t.^(j-Ttwo)
 	end
 	return ret
 end
+hp{T<:Real}(t,u0::T,u::Vector{None}) = hp(t,u0,[zero(T)])
 
-function hfast{T<:Number}(t::Array{T,1},u0::T,u::Array{T,1})
+function hfast{T<:Number}(t::Vector{T},u0::T,u::Vector{T})
 	nu,ntm1d2 = length(u),int((length(t)-1)/2)
 	schrec(ntm1d2,zero(T),u0*sinh(t[ntm1d2+2]),2cosh(t[ntm1d2+2])) .+ t.^([0:nu-1]')*u
 end
+hfast{T<:Number}(t::Vector{T},u0::T,u::Vector{None}) = hfast(t,u0,[zero(T)])
 
-function hpfast{T<:Number}(t::Array{T,1},u0::T,u::Array{T,1})
+function hpfast{T<:Number}(t::Vector{T},u0::T,u::Vector{T})
 	nu,ntm1d2 = length(u),int((length(t)-1)/2)
 	schrec(ntm1d2,u0,u0*cosh(t[ntm1d2+2]),2cosh(t[ntm1d2+2])) .+ t.^([0:nu-2]')*([1:nu-1].*u[2:nu])
 end
+hpfast{T<:Number}(t::Vector{T},u0::T,u::Vector{None}) = hpfast(t,u0,[zero(T)])
 
 function schrec{T<:Number}(nt::Integer,v1::T,v2::T,v3::T)
 	rec = Array(T,2nt+1)

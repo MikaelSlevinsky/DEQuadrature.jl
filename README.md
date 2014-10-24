@@ -86,10 +86,9 @@ on [0,∞) with the singularities:
 We use the package functions SincPade and PolyRoots to compute the approximate locations of the singularities adaptively. Then, we use the package function DEMapValues to calculate the optimized map and the function DENodesAndWeights to calculate nodes and weights. Looping over a geometrically increasing order, we can approximate the integral very accurately:
 
 
-	u0,u = big(pi)/BigFloat("2.0"),zeros(BigFloat,3);
 	x = zeros(BigFloat,5);
 	for i = 1:4
-		x,w = DENodesAndWeights(u0,u,2^i;digits=100,domain=SemiInfinite2);
+		x,w = DENodesAndWeights(Complex{BigFloat}[],2^i;digits=100,domain=SemiInfinite2);
 		val = dot(f(x),w)
 		err = abs(val-BigFloat(DEQuadrature.example4p4))
 		println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
@@ -97,7 +96,7 @@ We use the package functions SincPade and PolyRoots to compute the approximate l
 	for i = 5:8
 		(p,q) = SincPade(f(x),x,(length(x)-1)/2,i-2,i+2);
 		rootvec = PolyRoots(q);
-		x,w = DENodesAndWeights(convert(Array{Complex{BigFloat},1},rootvec[end-4:2:end]),2^i;digits=100,domain=SemiInfinite2,Hint=25);
+		x,w = DENodesAndWeights(convert(Vector{Complex{BigFloat}},rootvec[end-4:2:end]),2^i;digits=100,domain=SemiInfinite2,Hint=25);
 		val = dot(f(x),w)
 		err = abs(val-BigFloat(DEQuadrature.example4p4))
 		println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
