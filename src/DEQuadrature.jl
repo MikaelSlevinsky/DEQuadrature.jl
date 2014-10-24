@@ -134,6 +134,7 @@ function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),digits::Integ
 	addOption(prob, "hessian_approximation", "limited-memory")
 	
 	eptbar,mindex = findmin(ept)
+	eptbar /= sin(pi/2gaopt)
 	datbar = dat[mindex]
 
 	datexact = dat
@@ -142,7 +143,7 @@ function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),digits::Integ
 	dattest = fill(datbar,n)
 	epttest = ept
 	
-	prob.x = [sign(dat.-datbar).*acosh(ept./eptbar),datbar,zeros(Float64,n-1)]
+	prob.x = [sign(dat.-datbar).*real(asinh(im*ept./eptbar)),datbar,zeros(Float64,n-1)]
 	for j=0:Hint
 		global dat = (1-j/Hint).*dattest.+j/Hint.*datexact
 		global ept = (1-j/Hint).*epttest.+j/Hint.*eptexact
@@ -212,132 +213,11 @@ function eval_f(x)
   for k=1:n
 	temp3=0.0
 	for j=1:n
-		temp3+=x[n+j]*complex(x[k],pi/2)^(j-1)
-	end
-	temp1+=ept[k]-imag(temp3)
-	temp2+=cosh(x[k])
-  end
-  return temp1/temp2
-end
-
-function eval_g(x, g)
-  # Bad: g    = zeros(2)  # Allocates new array
-  # OK:  g[:] = zeros(2)  # Modifies 'in place'
-  g[:] = zeros(2n)
-  f = eval_f(x)
-  for k=1:n
-	temp1=0.0
-	for j=1:n
-		temp1+=x[n+j]*complex(x[k],pi/2)^(j-1)
-	end
-	g[k] = real(temp1)-dat[k]
-	g[n+k] = f - (ept[k] - imag(temp1))/cosh(x[k])
-  end
-  g[2n] = x[1] + x[n]
-end
-
-function eval_grad_f(x, grad_f)
-  # Bad: grad_f    = zeros(4)  # Allocates new array
-  # OK:  grad_f[:] = zeros(4)  # Modifies 'in place'
-  
-  grad_f[:] = zeros(2n)
-  for r=1:n
-	temp1=0.0
-	temp2=0.0
-	temp4=0.0
-	temp5=0.0
-	for k=1:n
-		temp3=0.0
-		for j=1:n
-			temp3+=x[n+j]*complex(x[k],pi/2)^(j-1)
-		end
-		temp1+=ept[k]-imag(temp3)
-		temp2+=cosh(x[k])
-		temp4+=x[n+k]*(k-1)*complex(x[r],pi/2)^(k-2)
-		temp5+=complex(x[k],pi/2)^(r-1)
-	end
-	grad_f[r] = -(temp2*imag(temp4) + sinh(x[r])*temp1)/temp2^2
-	grad_f[n+r] = -imag(temp5)/temp2
-  end
-end
-
-function eval_jac_g(x, mode, rows, cols, values)
-  if mode == :Structure
-    idx = 1
-    for row = 1:2n
-      for col = 1:2n
-        rows[idx] = row
-        cols[idx] = col
-        idx += 1
-      end
-    end
-  else
-	grad_f = zeros(2n)
-	values[:]=zeros(4n^2)
-	eval_grad_f(x,grad_f)
-	for k=1:n
-	
-		temp1=0.0
-		temp2=0.0
-		for r=1:n
-			values[2n*(k-1)+r]=0.0
-			values[2n^2+2n*(k-1)+r]=grad_f[r]
-			values[2n^2+2n*(k-1)+n+r]=grad_f[n+r]
-			
-			temp1+=x[n+r]*(r-1)*complex(x[k],pi/2)^(r-2)
-			values[2n*(k-1)+n+r] = real(complex(x[k],pi/2)^(r-1))
-			
-			temp2+=x[n+r]*complex(x[k],pi/2)^(r-1)
-			
-			temp3=0.0
-			for j=1:n
-				temp3+=x[n+j]*complex(x[k],pi/2)^(j-1)
-			end
-			values[2n^2+2n*(k-1)+n+r] += imag(complex(x[k],pi/2)^(r-1))/cosh(x[k])
-		end
-		values[2n*(k-1)+k] = real(temp1)
-		values[2n^2+2n*(k-1)+k] += ((ept[k]-imag(temp2))*sinh(x[k])+cosh(x[k])*imag(temp1))/cosh(x[k])^2
-	
-	end
-	for k =1:n
-		values[4n^2-k+1] = 0.0
-		values[4n^2-n-k+1] = 0.0
-	end
-	values[4n^2-2n+1] = 1.0
-	values[4n^2-n] = 1.0
-  end
-end
-
-#
-# Below are 400-digit accurate results for the examples in the readme. To use, simply apply BigFloat to the strings to return the desired accuracy in the current BigFloat precision.
-#
-example4p1 = "-2.04645081160694748690442050179886173463698400851312978159495108281833923937599915411239665314732909414150138401559892277212580897054853305044117124435121918549124604645789190248721167573993297627891884242759929922470299331035480062586543433278436544374899377193299256405496172603459957078880800178958528771642962893695508317394167405216487683527096100475182610564645687173201068270992551244010304597e+00"
-example4p2 =  "1.50133619876062770101030470326173553208854739646240081225845195322624377330867094144192464692844931351956249439446687259575908821074467954700173593866783934590906808530844595015500541680530415264580194453133658724574536164866695611699188173914168980057456962540582381978462005370937587010012338985572909021270993977527355156445163416743376725727256310809095229447802636632237845095430431700882602931e+01"
-example4p4 =  "1.25561272649571457524072745777324565745811577731244208918556803079860974103212280154092098290346761945467623458393541899340910959432986144854308183981183773821087234316281865748406315573642170223984437961159361930528002471311495840420142211103620828044445220101847580610875452719310048279384346206258445806770989182361981757265589400465406224583252123717264572443063396429861634681780593162842211179e+01"
-
-end #module
-
-
-
-#This set of auxiliary functions does not work.
-#This is the set I'm currently working on.
-#=
-
-#
-# The remainder of the functions are used by Ipopt.
-#
-function eval_f(x)
-  temp1 = 0.0
-  temp2 = 0.0
-  for k=1:n
-	temp3=0.0
-	for j=1:n
 		temp3+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
 	end
 	temp1+=ept[k]-imag(temp3)
 	temp2+=cosh(x[k])*sin(pi/2gaopt)
   end
-  println(temp1/temp2)
   return temp1/temp2
 end
 
@@ -353,7 +233,6 @@ function eval_g(x, g)
 	end
 	g[k] = f*sinh(x[k])*cos(pi/2gaopt) + real(temp1)-dat[k]
 	g[n+k] =  f*cosh(x[k])*sin(pi/2gaopt) + imag(temp1)-ept[k]
-	println(g[k],"        ",g[n+k])
   end
   g[2n] = x[1] + x[n]
 end
@@ -361,7 +240,6 @@ end
 function eval_grad_f(x, grad_f)
   # Bad: grad_f    = zeros(4)  # Allocates new array
   # OK:  grad_f[:] = zeros(4)  # Modifies 'in place'
-  
   grad_f[:] = zeros(2n)
   for r=1:n
 	temp1=0.0
@@ -399,28 +277,25 @@ function eval_jac_g(x, mode, rows, cols, values)
 	f = eval_f(x)
 	eval_grad_f(x,grad_f)
 	for k=1:n
-	
 		temp1=0.0
-		temp2=0.0
 		for r=1:n
-			values[2n*(k-1)+r]=0.0
-			values[2n^2+2n*(k-1)+r]=grad_f[r]*sinh(x[r])*cos(pi/2gaopt) + f*cosh(x[r])*cos(pi/2gaopt)
-			values[2n^2+2n*(k-1)+n+r]=grad_f[n+r]*cosh(x[r])*sin(pi/2gaopt)
-			
-			temp1+=x[n+r]*(r-1)*complex(x[k],pi/2gaopt)^(r-2)
-			values[2n*(k-1)+n+r] = real(complex(x[k],pi/2gaopt)^(r-1))
-			
-			temp2+=x[n+r]*complex(x[k],pi/2gaopt)^(r-1)
-			
-			temp3=0.0
-			for j=1:n
-				temp3+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
-			end
+			values[2n*(k-1)+r]=grad_f[r]*sinh(x[k])*cos(pi/2gaopt)
+			values[2n*(k-1)+n+r]=grad_f[n+r]*sinh(x[k])*cos(pi/2gaopt)
+
+			values[2n^2+2n*(k-1)+r]=grad_f[r]*cosh(x[k])*sin(pi/2gaopt)
+			values[2n^2+2n*(k-1)+n+r]=grad_f[n+r]*cosh(x[k])*sin(pi/2gaopt)
+
+			values[2n*(k-1)+n+r] += real(complex(x[k],pi/2gaopt)^(r-1))
 			values[2n^2+2n*(k-1)+n+r] += imag(complex(x[k],pi/2gaopt)^(r-1))
+
+			temp1+=x[n+r]*(r-1)*complex(x[k],pi/2gaopt)^(r-2)
 		end
-		#values[2n*(k-1)+k] = real(temp1)
-		#values[2n^2+2n*(k-1)+k] += ((ept[k]-imag(temp2))*sinh(x[k])+cosh(x[k])*imag(temp1))/cosh(x[k])^2
-	
+		
+		values[2n*(k-1)+k] += f*cosh(x[k])*cos(pi/2gaopt)
+		values[2n^2+2n*(k-1)+k] += f*sinh(x[k])*sin(pi/2gaopt)
+		
+		values[2n*(k-1)+k] += real(temp1)
+		values[2n^2+2n*(k-1)+k] += imag(temp1)
 	end
 	for k =1:n
 		values[4n^2-k+1] = 0.0
@@ -430,4 +305,14 @@ function eval_jac_g(x, mode, rows, cols, values)
 	values[4n^2-n] = 1.0
   end
 end
-=#
+
+#
+# Below are 400-digit accurate results for the examples in the readme and tests.
+# To use, simply apply BigFloat to the strings to return the desired accuracy
+# in the current BigFloat precision.
+#
+example4p1 = "-2.04645081160694748690442050179886173463698400851312978159495108281833923937599915411239665314732909414150138401559892277212580897054853305044117124435121918549124604645789190248721167573993297627891884242759929922470299331035480062586543433278436544374899377193299256405496172603459957078880800178958528771642962893695508317394167405216487683527096100475182610564645687173201068270992551244010304597e+00"
+example4p2 =  "1.50133619876062770101030470326173553208854739646240081225845195322624377330867094144192464692844931351956249439446687259575908821074467954700173593866783934590906808530844595015500541680530415264580194453133658724574536164866695611699188173914168980057456962540582381978462005370937587010012338985572909021270993977527355156445163416743376725727256310809095229447802636632237845095430431700882602931e+01"
+example4p4 =  "1.25561272649571457524072745777324565745811577731244208918556803079860974103212280154092098290346761945467623458393541899340910959432986144854308183981183773821087234316281865748406315573642170223984437961159361930528002471311495840420142211103620828044445220101847580610875452719310048279384346206258445806770989182361981757265589400465406224583252123717264572443063396429861634681780593162842211179e+01"
+
+end #module
