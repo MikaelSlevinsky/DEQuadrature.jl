@@ -17,7 +17,7 @@ module DEQuadrature
 # References:
 # 
 #   1.	R. M. Slevinsky and S. Olver. On the use of conformal maps
-#		to accelerate the convergence of the trapezoidal rule
+#		for the acceleration of convergence of the trapezoidal rule
 #		and Sinc numerical methods, arXiv:1406.3320, 2014.
 #
 using Ipopt
