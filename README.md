@@ -10,14 +10,14 @@ double exponential endpoint decay. In addition, the variable transformations
 maximize the convergence rate despite singularities near the solution interval.
 
 The secondary function of this module computes the parameters of the
-conformal map h(t) in Eq. (3.14) of the reference [1]. This module requires
+conformal map h(t) in Eq. (3.14) of <a href="http://arxiv.org/abs/1406.3320">[1]</a>. This module requires
 the use of the Julia package Ipopt for solving the nonlinear program.
 
 
 	using DEQuadrature
 
 
-### Example 4.1 from [1]
+### Example 4.1 from <a href="http://arxiv.org/abs/1406.3320">[1]</a>
 
 Suppose we are interested in calculating the integral of:
 
@@ -43,7 +43,7 @@ as well as a square root singularity at the left endpoint and a logarithmic sing
 	end
 
 
-### Example 4.2 from [1]
+### Example 4.2 from <a href="http://arxiv.org/abs/1406.3320">[1]</a>
 
 The package has equal support for BigFloats, making high precision calculations a breeze! Suppose we are interested in calculating the integral of:
 
@@ -69,7 +69,7 @@ We use the package function DEMapValues to calculate the optimized map and the f
 	end
 
 
-### Example 4.4 from [1]
+### Example 4.4 from <a href="http://arxiv.org/abs/1406.3320">[1]</a>
 
 Suppose we are interested in calculating the integral of:
 
@@ -108,6 +108,6 @@ We use the package functions SincPade and PolyRoots to compute the approximate l
 # References:
 
  
-   1.	R. M. Slevinsky and S. Olver. On the use of conformal maps
+   1.	R. M. Slevinsky and S. Olver. <a href="http://arxiv.org/abs/1406.3320">On the use of conformal maps
 		for the acceleration of convergence of the trapezoidal rule
-		and Sinc numerical methods, arXiv:1406.3320, 2014.
+		and Sinc numerical methods</a>, arXiv:1406.3320, 2014.
