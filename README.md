@@ -36,7 +36,7 @@ as well as a square root singularity at the left endpoint and a logarithmic sing
 
 	u0,u,xpre = DEMapValues(z;domain=Finite(-0.5,0.0,0.0,1.0))
 	for i = 1:6
-		x,w = DENodesAndWeights(u0,u,2^i;domain=Finite(-0.5,0.0,0.0,1.0))
+		x,w = DENodesAndWeights(u0,u,2^i;b2factor=0.5,domain=Finite(-0.5,0.0,0.0,1.0))
 		val = dot(f(x),w)
 		err = abs(val-convert(Float64,BigFloat(DEQuadrature.example4p1)))
 		println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))

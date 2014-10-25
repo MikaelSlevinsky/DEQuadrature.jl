@@ -40,11 +40,11 @@ end
 #For functions on a Finite domain with algebraic and logarithmic endpoint singularities, use the numbers α, β, γ, and δ to compute the singularities in a stable way.
 Finite(α::Number,β::Number,γ::Number,δ::Number) = Domain(tanh,atanh,t->sech(t).^2.*(2./(exp(-2t).+1)).^α.*(2./(exp(2t).+1)).^β.*log(2./(exp(-2t).+1)).^γ.*log(2./(exp(2t).+1)).^δ)
 Infinite1 = Domain(sinh,asinh,cosh)
-Infinite2 = Domain(identity,identity,one)
+Infinite2 = Domain(identity,identity,t->0t+1)
 SemiInfinite1 = Domain(t->log(exp(t)+1),t->log(exp(t)-1),t->1./(1+exp(-t)))
 SemiInfinite2 = Domain(exp,log,exp)
 
-function DENodesAndWeights{T<:Number}(u0::T,u::Vector{T},n::Integer;ga::T=one(T),digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+function DENodesAndWeights{T<:Number}(u0::T,u::Vector{T},n::Integer;b2factor::T=one(T),ga::T=one(T),digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
 	#
 	# On entry:
 	#
@@ -53,6 +53,8 @@ function DENodesAndWeights{T<:Number}(u0::T,u::Vector{T},n::Integer;ga::T=one(T)
 	#
 	# Optionally:
 	#
+	# b2factor controls the proportionality of b2opt with u0,
+	# ga specifies the factor γ,
 	# digits controls the precision of BigFloat,
 	# domain specifies the domain, with the default set to Finite,
 	# Hint controls the homotopy solution process for the nonlinear program, and
@@ -67,9 +69,9 @@ function DENodesAndWeights{T<:Number}(u0::T,u::Vector{T},n::Integer;ga::T=one(T)
 		set_bigfloat_precision(bits)
 	end
 	
-	b2opt = u0
-	dDEopt = convert(T,pi)/2ga
-	gaopt = ga
+	b2opt = u0*b2factor
+	global gaopt = ga
+	dDEopt = convert(T,pi)/2gaopt
 		
 	hs = log(2*convert(T,pi)*dDEopt*gaopt*n/b2opt)/gaopt/n
 	hsk=linspace(-hs*n,hs*n,2n+1);hhsk=hfast(hsk,u0,u)#hhsk=h(hsk,u0,u)
@@ -79,9 +81,9 @@ function DENodesAndWeights{T<:Number}(u0::T,u::Vector{T},n::Integer;ga::T=one(T)
 	return x[cutoff],w[cutoff]
 end
 
-function DENodesAndWeights{T<:Number}(z::Vector{Complex{T}},n::Integer;ga::T=one(T),digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+function DENodesAndWeights{T<:Number}(z::Vector{Complex{T}},n::Integer;b2factor::T=one(T),ga::T=one(T),digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
 	u0,u,xpre = DEMapValues(z;ga=ga,digits=digits,domain=domain,Hint=Hint,obj_scaling_factor=obj_scaling_factor)
-	x,w = DENodesAndWeights(u0,u,n;ga=ga,digits=digits,domain=domain,Hint=Hint,obj_scaling_factor=obj_scaling_factor)
+	x,w = DENodesAndWeights(u0,u,n;b2factor=b2factor,ga=ga,digits=digits,domain=domain,Hint=Hint,obj_scaling_factor=obj_scaling_factor)
 	return x,w
 end
 
@@ -109,54 +111,50 @@ function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),digits::Integ
 		bits = convert(Int64,ceil(digits*log2(10)))
 		set_bigfloat_precision(bits)
 	end
-	if length(z) == 0
-		u0 = convert(T,pi)/2
-		u = zeros(T,1)
-		x = T[]
-		return u0,u,x
-	end
 
 	psiinvz = domain.psiinv(z)
 	global n = length(z)
 	global dat = convert(Vector{Float64},real(psiinvz))
 	global ept = convert(Vector{Float64},abs(imag(psiinvz)))
-	global gaopt = ga
-
-	x_U = [fill(30.0,n),fill(10.0,n)]
-	x_L = -x_U
+	global gaopt = ga#convert(Float64,ga)
 	
-	g_U = zeros(Float64,2n)
-	g_U[end] = 20.0
-	g_L = -g_U
-
-	prob = createProblem(2n, x_L, x_U, 2n, g_L, g_U, 4n^2, n*(2n+1),eval_f, eval_g, eval_grad_f, eval_jac_g,)#, eval_h)
-	addOption(prob, "print_level", 0)
-	addOption(prob, "obj_scaling_factor", obj_scaling_factor)
-	addOption(prob, "hessian_approximation", "limited-memory")
+	if n == 0
+		u0,u,x = convert(T,pi)/2,zeros(T,1),T[]
+		return u0,u,x
+	end
 	
 	eptbar,mindex = findmin(ept)
 	eptbar /= sin(pi/2gaopt)
 	datbar = dat[mindex]
 
-	datexact = dat
-	eptexact = ept
+	if n == 1
+		u0,u,x = convert(T,eptbar),[convert(T,datbar)],zeros(T,1)
+		return u0,u,x
+	end
 
-	dattest = fill(datbar,n)
-	epttest = ept
+	datexact,eptexact = dat,ept
+	dattest,epttest = fill(datbar,n),ept
 	
-	prob.x = [sign(dat.-datbar).*real(asinh(im*ept./eptbar)),datbar,zeros(Float64,n-1)]
+	x_U = [fill(30.0,n),fill(10.0,n)]#[fill(30.0,n),fill(10.0,n)]
+	x_L = -x_U
+	
+	g_U = zeros(Float64,2n)
+	g_U[end] = 20.0#/gaopt#20.0
+	g_L = -g_U
+
+	prob = createProblem(2n, x_L, x_U, 2n, g_L, g_U, 4n^2, n*(2n+1),eval_f, eval_g, eval_grad_f, eval_jac_g,)#, eval_h)
+	addOption(prob, "print_level", 0);addOption(prob, "obj_scaling_factor", obj_scaling_factor);addOption(prob, "hessian_approximation", "limited-memory")
+	prob.x = [real(asinh(complex(sign(dat-datbar),ept)/eptbar)),datbar,zeros(Float64,n-1)]
 	for j=0:Hint
 		global dat = (1-j/Hint).*dattest.+j/Hint.*datexact
 		global ept = (1-j/Hint).*epttest.+j/Hint.*eptexact
 		status = solveProblem(prob)
 		if Ipopt.ApplicationReturnStatus[status] != :Solve_Succeeded && Ipopt.ApplicationReturnStatus[status] != :Solved_To_Acceptable_Level
-			#error("There was a problem with the convergence.\n Try a larger homotopy or a smaller objective scaling factor.\n The Ipopt return status is ",Ipopt.ApplicationReturnStatus[status],".")
+			error("There was a problem with the convergence.\n Try a larger homotopy or a smaller objective scaling factor.\n The Ipopt return status is ",Ipopt.ApplicationReturnStatus[status],".")
 		end
 	end
 	
-	u0 = convert(T,prob.obj_val)
-	u = convert(Vector{T},prob.x[n+1:2n])
-	x = convert(Vector{T},prob.x[1:n])
+	u0,u,x = convert(T,prob.obj_val),convert(Vector{T},prob.x[n+1:2n]),convert(Vector{T},prob.x[1:n])
 	
 	return u0,u,x
 end
