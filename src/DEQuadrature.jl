@@ -116,7 +116,7 @@ function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),digits::Integ
 	global n = length(z)
 	global dat = convert(Vector{Float64},real(psiinvz))
 	global ept = convert(Vector{Float64},abs(imag(psiinvz)))
-	global gaopt = ga#convert(Float64,ga)
+	global gaopt = convert(Float64,ga)
 	
 	if n == 0
 		u0,u,x = convert(T,pi)/2,zeros(T,1),T[]
@@ -135,7 +135,7 @@ function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),digits::Integ
 	datexact,eptexact = dat,ept
 	dattest,epttest = fill(datbar,n),ept
 	
-	x_U = [fill(30.0,n),fill(10.0,n)]#[fill(30.0,n),fill(10.0,n)]
+	x_U = [fill(30.0,n),fill(10.0,n)]
 	x_L = -x_U
 	
 	g_U = zeros(Float64,2n)
