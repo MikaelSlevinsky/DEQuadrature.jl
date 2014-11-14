@@ -117,6 +117,8 @@ function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),digits::Integ
 	global dat = convert(Vector{Float64},real(psiinvz))
 	global ept = convert(Vector{Float64},abs(imag(psiinvz)))
 	global gaopt = convert(Float64,ga)
+	global spg = sinpi(1/2gaopt)
+	global cpg = cospi(1/2gaopt)
 	
 	if n == 0
 		u0,u,x = convert(T,pi)/2,zeros(T,1),T[]
@@ -124,7 +126,7 @@ function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),digits::Integ
 	end
 	
 	eptbar,mindex = findmin(ept)
-	eptbar /= sin(pi/2gaopt)
+	eptbar /= spg
 	datbar = dat[mindex]
 
 	if n == 1
@@ -215,7 +217,7 @@ function eval_f(x)
 		temp3+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
 	end
 	temp1+=ept[k]-imag(temp3)
-	temp2+=cosh(x[k])*sin(pi/2gaopt)
+	temp2+=cosh(x[k])*spg
   end
   return temp1/temp2
 end
@@ -230,8 +232,8 @@ function eval_g(x, g)
 	for j=1:n
 		temp1+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
 	end
-	g[k] = f*sinh(x[k])*cos(pi/2gaopt) + real(temp1)-dat[k]
-	g[n+k] =  f*cosh(x[k])*sin(pi/2gaopt) + imag(temp1)-ept[k]
+	g[k] = f*sinh(x[k])*cpg + real(temp1)-dat[k]
+	g[n+k] =  f*cosh(x[k])*spg + imag(temp1)-ept[k]
   end
   g[2n] = x[1] + x[n]
 end
@@ -251,11 +253,11 @@ function eval_grad_f(x, grad_f)
 			temp3+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
 		end
 		temp1+=ept[k]-imag(temp3)
-		temp2+=cosh(x[k])*sin(pi/2gaopt)
+		temp2+=cosh(x[k])*spg
 		temp4+=x[n+k]*(k-1)*complex(x[r],pi/2gaopt)^(k-2)
 		temp5+=complex(x[k],pi/2gaopt)^(r-1)
 	end
-	grad_f[r] = -(temp2*imag(temp4) + sinh(x[r])*sin(pi/2gaopt)*temp1)/temp2^2
+	grad_f[r] = -(temp2*imag(temp4) + sinh(x[r])*spg*temp1)/temp2^2
 	grad_f[n+r] = -imag(temp5)/temp2
   end
 end
@@ -278,11 +280,11 @@ function eval_jac_g(x, mode, rows, cols, values)
 	for k=1:n
 		temp1=0.0
 		for r=1:n
-			values[2n*(k-1)+r]=grad_f[r]*sinh(x[k])*cos(pi/2gaopt)
-			values[2n*(k-1)+n+r]=grad_f[n+r]*sinh(x[k])*cos(pi/2gaopt)
+			values[2n*(k-1)+r]=grad_f[r]*sinh(x[k])*cpg
+			values[2n*(k-1)+n+r]=grad_f[n+r]*sinh(x[k])*cpg
 
-			values[2n^2+2n*(k-1)+r]=grad_f[r]*cosh(x[k])*sin(pi/2gaopt)
-			values[2n^2+2n*(k-1)+n+r]=grad_f[n+r]*cosh(x[k])*sin(pi/2gaopt)
+			values[2n^2+2n*(k-1)+r]=grad_f[r]*cosh(x[k])*spg
+			values[2n^2+2n*(k-1)+n+r]=grad_f[n+r]*cosh(x[k])*spg
 
 			values[2n*(k-1)+n+r] += real(complex(x[k],pi/2gaopt)^(r-1))
 			values[2n^2+2n*(k-1)+n+r] += imag(complex(x[k],pi/2gaopt)^(r-1))
@@ -290,8 +292,8 @@ function eval_jac_g(x, mode, rows, cols, values)
 			temp1+=x[n+r]*(r-1)*complex(x[k],pi/2gaopt)^(r-2)
 		end
 		
-		values[2n*(k-1)+k] += f*cosh(x[k])*cos(pi/2gaopt)
-		values[2n^2+2n*(k-1)+k] += f*sinh(x[k])*sin(pi/2gaopt)
+		values[2n*(k-1)+k] += f*cosh(x[k])*cpg
+		values[2n^2+2n*(k-1)+k] += f*sinh(x[k])*spg
 		
 		values[2n*(k-1)+k] += real(temp1)
 		values[2n^2+2n*(k-1)+k] += imag(temp1)
