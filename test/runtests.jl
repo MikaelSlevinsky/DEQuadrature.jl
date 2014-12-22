@@ -3,7 +3,7 @@ using Base.Test
 
 println("Testing Example 4.1")
 
-f(x) = exp(1./((x.-z[1].re).^2.+z[1].im.^2))./((x.-z[2].re).^2.+z[2].im.^2)
+f(x) = exp(1./abs2(x-z[1]))./abs2(x-z[2])
 z = [complex(-0.5,1.0),complex(0.5,0.5)]
 
 u0,u,xpre = DEMapValues(z;domain=Finite(-0.5,0.0,0.0,1.0))
@@ -18,12 +18,14 @@ end
 
 println("Testing Example 4.2")
 
-f(x) = exp(10./((x.-z[1].re).^2.+z[1].im.^2)).*cos(10./((x.-z[2].re).^2.+z[2].im.^2))./((x.-z[3].re).^2.+z[3].im.^2)./sqrt((x.-z[4].re).^2.+z[4].im.^2)
-z = [complex(BigFloat("-2.0"),BigFloat("1.0")),complex(BigFloat("-1.0"),BigFloat("0.5")),complex(BigFloat("1.0"),BigFloat("0.25")),complex(BigFloat("2.0"),BigFloat("1.0"))]
+digits(100)
 
-u0,u,xpre = DEMapValues(z;digits=100,domain=Infinite1)
+f(x) = exp(10./abs2(x-z[1])).*cos(10./abs2(x-z[2]))./abs2(x-z[3])./abs(x-z[4])
+z = [complex(big(-2.0),1.0),complex(-1.0,.5),complex(1.0,0.25),complex(2.0,1.0)]
+
+u0,u,xpre = DEMapValues(z;domain=Infinite1)
 for i = 1:10
-	x,w = DENodesAndWeights(u0,u,2^i;digits=100,domain=Infinite1)
+	x,w = DENodesAndWeights(u0,u,2^i;domain=Infinite1)
 	val = dot(f(x),w)
 	err = abs(val-BigFloat(DEQuadrature.example4p2))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
@@ -33,12 +35,12 @@ end
 
 println("Testing Example 4.4")
 
-f(x) = x./sqrt((x.-z[1].re).^2.+z[1].im.^2)./((x.-z[2].re).^2.+z[2].im.^2)./((x.-z[3].re).^2.+z[3].im.^2)
-z = [complex(BigFloat("1.0"),BigFloat("1.0")),complex(BigFloat("2.0"),BigFloat("0.5")),complex(BigFloat("3.0"),BigFloat("1.0")/BigFloat("3.0"))]
+f(x) = x./abs(x-z[1])./abs2(x-z[2])./abs2(x-z[3])
+z = [complex(big(1.0),1.0),complex(2.,.5),complex(3,1//3)]
 
 x = zeros(BigFloat,5);
 for i = 1:4
-	x,w = DENodesAndWeights(Complex{BigFloat}[],2^i;digits=100,domain=SemiInfinite2)
+	x,w = DENodesAndWeights(Complex{BigFloat}[],2^i;domain=SemiInfinite2)
 	val = dot(f(x),w)
 	err = abs(val-BigFloat(DEQuadrature.example4p4))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
@@ -46,7 +48,7 @@ end
 for i = 5:8
 	(p,q) = SincPade(f(x),x,(length(x)-1)/2,i-2,i+2);
 	rootvec = PolyRoots(q);
-	x,w = DENodesAndWeights(convert(Vector{Complex{BigFloat}},rootvec[end-4:2:end]),2^i;digits=100,domain=SemiInfinite2,Hint=25)
+	x,w = DENodesAndWeights(convert(Vector{Complex{BigFloat}},rootvec[end-4:2:end]),2^i;domain=SemiInfinite2,Hint=25)
 	val = dot(f(x),w)
 	err = abs(val-BigFloat(DEQuadrature.example4p4))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
@@ -62,13 +64,16 @@ u0,u,xpre = DEMapValues(z;ga=ga)
 @test norm(z - tanh(DEQuadrature.h(complex(xpre,pi/2/ga),u0,u))) <= sqrt(eps())
 
 println("Testing from Townsend, Trogdon and Olver, arXiv:1410.5286, 2014")
+
+digits(56)
+
 val = zeros(BigFloat,10)
-z = [complex(BigFloat("0.0"),BigFloat("0.2"))]
+z = [complex(big(0.0),big(0.2))]
 f(x) = exp(-x.^8/2+cos(10x))./(1+25x.^2)
 
-u0,u,xpre = DEMapValues(z;ga=BigFloat("8.0"),digits=100,domain=Infinite2)
+u0,u,xpre = DEMapValues(z;ga=big(8.0),domain=Infinite2)
 for i = 1:10
-	x,w = DENodesAndWeights(u0,u,2^i;b2factor=u0^7/2^9,ga=BigFloat("8.0"),digits=100,domain=Infinite2)
+	x,w = DENodesAndWeights(u0,u,2^i;b2factor=u0^7/2^9,ga=big(8.0),domain=Infinite2)
 	val[i] = dot(f(x),w)
 	println("Order: ",i," Value: ",val[i])
 end

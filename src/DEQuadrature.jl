@@ -22,7 +22,7 @@ module DEQuadrature
 #
 using Ipopt
 
-export DENodesAndWeights,DEMapValues,Domain
+export DENodesAndWeights,DEMapValues,Domain,digits
 export Finite,Infinite1,Infinite2,SemiInfinite1,SemiInfinite2
 
 include("SincPade.jl")
@@ -44,7 +44,13 @@ Infinite2 = Domain(identity,identity,t->0t+1)
 SemiInfinite1 = Domain(t->log(exp(t)+1),t->log(exp(t)-1),t->1./(1+exp(-t)))
 SemiInfinite2 = Domain(exp,log,exp)
 
-function DENodesAndWeights{T<:Number}(u0::T,u::Vector{T},n::Integer;b2factor::T=one(T),ga::T=one(T),digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+#
+# This function provides a convenient way to query or specify the BigFloat precision.
+#
+digits(n::Integer) = set_bigfloat_precision(int(ceil(n*log2(10))))
+digits() = int(floor(get_bigfloat_precision()*log10(2)))
+
+function DENodesAndWeights{T<:Number}(u0::T,u::Vector{T},n::Integer;b2factor::T=one(T),ga::T=one(T),domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
 	#
 	# On entry:
 	#
@@ -55,7 +61,6 @@ function DENodesAndWeights{T<:Number}(u0::T,u::Vector{T},n::Integer;b2factor::T=
 	#
 	# b2factor controls the proportionality of b2opt with u0,
 	# ga specifies the factor γ,
-	# digits controls the precision of BigFloat,
 	# domain specifies the domain, with the default set to Finite,
 	# Hint controls the homotopy solution process for the nonlinear program, and
 	# obj_scaling_factor controls the scaling of the objective function.
@@ -64,10 +69,6 @@ function DENodesAndWeights{T<:Number}(u0::T,u::Vector{T},n::Integer;b2factor::T=
 	#
 	# x, w are the nodes and weights of the double exponential quadrature.
 	#
-	if T <: BigFloat
-		bits = convert(Int64,ceil(digits*log2(10)))
-		set_bigfloat_precision(bits)
-	end
 	
 	b2opt = u0*b2factor
 	global gaopt = ga
@@ -81,13 +82,13 @@ function DENodesAndWeights{T<:Number}(u0::T,u::Vector{T},n::Integer;b2factor::T=
 	return x[cutoff],w[cutoff]
 end
 
-function DENodesAndWeights{T<:Number}(z::Vector{Complex{T}},n::Integer;b2factor::T=one(T),ga::T=one(T),digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
-	u0,u,xpre = DEMapValues(z;ga=ga,digits=digits,domain=domain,Hint=Hint,obj_scaling_factor=obj_scaling_factor)
-	x,w = DENodesAndWeights(u0,u,n;b2factor=b2factor,ga=ga,digits=digits,domain=domain,Hint=Hint,obj_scaling_factor=obj_scaling_factor)
+function DENodesAndWeights{T<:Number}(z::Vector{Complex{T}},n::Integer;b2factor::T=one(T),ga::T=one(T),domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+	u0,u,xpre = DEMapValues(z;ga=ga,domain=domain,Hint=Hint,obj_scaling_factor=obj_scaling_factor)
+	x,w = DENodesAndWeights(u0,u,n;b2factor=b2factor,ga=ga,domain=domain,Hint=Hint,obj_scaling_factor=obj_scaling_factor)
 	return x,w
 end
 
-function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),digits::Integer=77,domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
+function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),domain::Domain=Finite(zero(T),zero(T),zero(T),zero(T)),Hint::Integer=10,obj_scaling_factor::Float64=-1.0)
 	#
 	# On entry:
 	#
@@ -97,7 +98,6 @@ function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),digits::Integ
 	#
 	# Optionally:
 	#
-	# digits controls the precision of BigFloat,
 	# domain specifies the domain, with the default set to Finite,
 	# Hint controls the homotopy solution process for the nonlinear program, and
 	# obj_scaling_factor controls the scaling of the objective function.
@@ -107,10 +107,6 @@ function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),digits::Integ
 	# u0 and u are the parameters of the map h(t) in Eq. (3.14), and
 	# x are the x-coordinates of the pre-images x +/- i pi/2γ of the singularities.
 	#
-	if T <: BigFloat
-		bits = convert(Int64,ceil(digits*log2(10)))
-		set_bigfloat_precision(bits)
-	end
 
 	psiinvz = domain.psiinv(z)
 	global n = length(z)
@@ -169,7 +165,7 @@ function h{T<:Real}(t,u0::T,u::Vector{T})
 	ret = u0*sinh(t)
 	Tone = one(T)
 	for j=1:nu
-		ret .+= u[j]*t.^(j-Tone)
+		@inbounds ret .+= u[j]*t.^(j-Tone)
 	end
 	return ret
 end
@@ -179,7 +175,7 @@ function hp{T<:Real}(t,u0::T,u::Vector{T})
 	Tone = one(T)
 	Ttwo = 2Tone
 	for j=2:nu
-		ret .+= u[j]*(j-Tone)*t.^(j-Ttwo)
+		@inbounds ret .+= u[j]*(j-Tone)*t.^(j-Ttwo)
 	end
 	return ret
 end
@@ -199,8 +195,8 @@ function schrec{T<:Number}(nt::Integer,v1::T,v2::T,v3::T)
 	rec[nt+2] = v2
 	rec[nt] = v3*v1-v2
 	for i=2:nt
-		rec[nt+i+1] = v3*rec[nt+i] - rec[nt+i-1]
-		rec[nt-i+1] = v3*rec[nt-i+2] - rec[nt-i+3]
+		@inbounds rec[nt+i+1] = v3*rec[nt+i] - rec[nt+i-1]
+		@inbounds rec[nt-i+1] = v3*rec[nt-i+2] - rec[nt-i+3]
 	end
 	return rec
 end
@@ -214,10 +210,10 @@ function eval_f(x)
   for k=1:n
 	temp3=0.0
 	for j=1:n
-		temp3+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
+		@inbounds temp3+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
 	end
-	temp1+=ept[k]-imag(temp3)
-	temp2+=cosh(x[k])*spg
+	@inbounds temp1+=ept[k]-imag(temp3)
+	@inbounds temp2+=cosh(x[k])*spg
   end
   return temp1/temp2
 end
@@ -230,12 +226,12 @@ function eval_g(x, g)
   for k=1:n
 	temp1=0.0
 	for j=1:n
-		temp1+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
+		@inbounds temp1+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
 	end
-	g[k] = f*sinh(x[k])*cpg + real(temp1)-dat[k]
-	g[n+k] =  f*cosh(x[k])*spg + imag(temp1)-ept[k]
+	@inbounds g[k] = f*sinh(x[k])*cpg + real(temp1)-dat[k]
+	@inbounds g[n+k] =  f*cosh(x[k])*spg + imag(temp1)-ept[k]
   end
-  g[2n] = x[1] + x[n]
+  @inbounds g[2n] = x[1] + x[n]
 end
 
 function eval_grad_f(x, grad_f)
@@ -250,15 +246,15 @@ function eval_grad_f(x, grad_f)
 	for k=1:n
 		temp3=0.0
 		for j=1:n
-			temp3+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
+			@inbounds temp3+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
 		end
-		temp1+=ept[k]-imag(temp3)
-		temp2+=cosh(x[k])*spg
-		temp4+=x[n+k]*(k-1)*complex(x[r],pi/2gaopt)^(k-2)
-		temp5+=complex(x[k],pi/2gaopt)^(r-1)
+		@inbounds temp1+=ept[k]-imag(temp3)
+		@inbounds temp2+=cosh(x[k])*spg
+		@inbounds temp4+=x[n+k]*(k-1)*complex(x[r],pi/2gaopt)^(k-2)
+		@inbounds temp5+=complex(x[k],pi/2gaopt)^(r-1)
 	end
-	grad_f[r] = -(temp2*imag(temp4) + sinh(x[r])*spg*temp1)/temp2^2
-	grad_f[n+r] = -imag(temp5)/temp2
+	@inbounds grad_f[r] = -(temp2*imag(temp4) + sinh(x[r])*spg*temp1)/temp2^2
+	@inbounds grad_f[n+r] = -imag(temp5)/temp2
   end
 end
 
@@ -280,30 +276,30 @@ function eval_jac_g(x, mode, rows, cols, values)
 	for k=1:n
 		temp1=0.0
 		for r=1:n
-			values[2n*(k-1)+r]=grad_f[r]*sinh(x[k])*cpg
-			values[2n*(k-1)+n+r]=grad_f[n+r]*sinh(x[k])*cpg
+			@inbounds values[2n*(k-1)+r]=grad_f[r]*sinh(x[k])*cpg
+			@inbounds values[2n*(k-1)+n+r]=grad_f[n+r]*sinh(x[k])*cpg
 
-			values[2n^2+2n*(k-1)+r]=grad_f[r]*cosh(x[k])*spg
-			values[2n^2+2n*(k-1)+n+r]=grad_f[n+r]*cosh(x[k])*spg
+			@inbounds values[2n^2+2n*(k-1)+r]=grad_f[r]*cosh(x[k])*spg
+			@inbounds values[2n^2+2n*(k-1)+n+r]=grad_f[n+r]*cosh(x[k])*spg
 
-			values[2n*(k-1)+n+r] += real(complex(x[k],pi/2gaopt)^(r-1))
-			values[2n^2+2n*(k-1)+n+r] += imag(complex(x[k],pi/2gaopt)^(r-1))
+			@inbounds values[2n*(k-1)+n+r] += real(complex(x[k],pi/2gaopt)^(r-1))
+			@inbounds values[2n^2+2n*(k-1)+n+r] += imag(complex(x[k],pi/2gaopt)^(r-1))
 
-			temp1+=x[n+r]*(r-1)*complex(x[k],pi/2gaopt)^(r-2)
+			@inbounds temp1+=x[n+r]*(r-1)*complex(x[k],pi/2gaopt)^(r-2)
 		end
 		
-		values[2n*(k-1)+k] += f*cosh(x[k])*cpg
-		values[2n^2+2n*(k-1)+k] += f*sinh(x[k])*spg
+		@inbounds values[2n*(k-1)+k] += f*cosh(x[k])*cpg
+		@inbounds values[2n^2+2n*(k-1)+k] += f*sinh(x[k])*spg
 		
-		values[2n*(k-1)+k] += real(temp1)
-		values[2n^2+2n*(k-1)+k] += imag(temp1)
+		@inbounds values[2n*(k-1)+k] += real(temp1)
+		@inbounds values[2n^2+2n*(k-1)+k] += imag(temp1)
 	end
 	for k =1:n
-		values[4n^2-k+1] = 0.0
-		values[4n^2-n-k+1] = 0.0
+		@inbounds values[4n^2-k+1] = 0.0
+		@inbounds values[4n^2-n-k+1] = 0.0
 	end
-	values[4n^2-2n+1] = 1.0
-	values[4n^2-n] = 1.0
+	@inbounds values[4n^2-2n+1] = 1.0
+	@inbounds values[4n^2-n] = 1.0
   end
 end
 
