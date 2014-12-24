@@ -63,7 +63,7 @@ z = [complex(big(-2.0),1.0),complex(-1.0,.5),complex(1.0,0.25),complex(2.0,1.0)]
 We start by setting the `digits` we desire:
 
 ```julia
-digits(100)
+DEQuadrature.digits(100)
 ```
 
 Then, we use the package function `DEMapValues` to calculate the optimized map and the function `DENodesAndWeights` to calculate nodes and weights. Looping over a geometrically increasing order, we can approximate the integral very accurately:

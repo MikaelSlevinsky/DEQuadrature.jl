@@ -18,7 +18,7 @@ end
 
 println("Testing Example 4.2")
 
-digits(100)
+DEQuadrature.digits(100)
 
 f(x) = exp(10./abs2(x-z[1])).*cos(10./abs2(x-z[2]))./abs2(x-z[3])./abs(x-z[4])
 z = [complex(big(-2.0),1.0),complex(-1.0,.5),complex(1.0,0.25),complex(2.0,1.0)]
@@ -65,7 +65,7 @@ u0,u,xpre = DEMapValues(z;ga=ga)
 
 println("Testing from Townsend, Trogdon and Olver, arXiv:1410.5286, 2014")
 
-digits(56)
+DEQuadrature.digits(56)
 
 val = zeros(BigFloat,10)
 z = [complex(big(0.0),big(0.2))]

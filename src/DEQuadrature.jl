@@ -22,7 +22,7 @@ module DEQuadrature
 #
 using Ipopt
 
-export DENodesAndWeights,DEMapValues,Domain,digits
+export DENodesAndWeights,DEMapValues,Domain
 export Finite,Infinite1,Infinite2,SemiInfinite1,SemiInfinite2
 
 include("SincPade.jl")
