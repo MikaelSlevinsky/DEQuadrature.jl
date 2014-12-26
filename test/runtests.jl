@@ -31,7 +31,7 @@ for i = 1:10
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
 end
 
-@test (u0,u,xpre) == (BigFloat("5.771509561879041460999255341857150369833107106387615203857421875e-06"),BigFloat[2.54314567355082010724487417974160052835941314697265625e-01,1.4935754761346553554091087789856828749179840087890625e-01,-4.54334089114279658649930837555075413547456264495849609375e-03,9.98800044925044036743522202215217475895769894123077392578125e-05],BigFloat[-9.0615747150653209729398440686054527759552001953125e+00,-6.52835835728521995946493916562758386135101318359375e+00,4.86448858018575069905864438624121248722076416015625e+00,1.1534505102994042857744716457091271877288818359375e+01])
+@test (float64(u0),float64(u),float64(xpre)) == (5.771509561879045e-6,[0.25431456735504016,0.14935754761346481,-0.004543340891142737,9.988000449253805e-5],[-9.061574715065113,-6.528358357285027,4.864488580186121,11.534505102993966])
 
 println("Testing Example 4.4")
 
@@ -39,13 +39,14 @@ f(x) = x./abs(x-z[1])./abs2(x-z[2])./abs2(x-z[3])
 z = [complex(big(1.0),1.0),complex(2.,.5),complex(3,1//3)]
 
 x = zeros(BigFloat,5);
+err = 0.0
 for i = 1:4
 	x,w = DENodesAndWeights(Complex{BigFloat}[],2^i;domain=SemiInfinite2)
 	val = dot(f(x),w)
 	err = abs(val-BigFloat(DEQuadrature.example4p4))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
 end
-for i = 5:8
+for i = 5:9
 	(p,q) = SincPade(f(x),x,(length(x)-1)/2,i-2,i+2);
 	rootvec = PolyRoots(q);
 	x,w = DENodesAndWeights(convert(Vector{Complex{BigFloat}},rootvec[end-4:2:end]),2^i;domain=SemiInfinite2,Hint=25)
@@ -54,8 +55,7 @@ for i = 5:8
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
 end
 
-@test x[2^8+1] == BigFloat("2.55307299802806318558093347887260855495042920224216067365244613360324258988776205014979791343391738471e+00")
-
+@test err <= -3log(eps(BigFloat))*eps(BigFloat)
 
 println("Testing γ > 1")
 z = [complex(-0.5,1.0),complex(0.0,0.5),complex(0.5,0.75)]
