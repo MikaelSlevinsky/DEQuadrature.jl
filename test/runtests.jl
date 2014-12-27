@@ -7,7 +7,8 @@ f(x) = exp(1./abs2(x-z[1]))./abs2(x-z[2])
 z = [complex(-0.5,1.0),complex(0.5,0.5)]
 
 u0,u,xpre = DEMapValues(z;domain=Finite(-0.5,0.0,0.0,1.0))
-for i = 1:6
+@time u0,u,xpre = DEMapValues(z;domain=Finite(-0.5,0.0,0.0,1.0))
+@time for i = 1:6
 	x,w = DENodesAndWeights(u0,u,2^i;b2factor=0.5,domain=Finite(-0.5,0.0,0.0,1.0))
 	val = dot(f(x),w)
 	err = abs(val-convert(Float64,BigFloat(DEQuadrature.example4p1)))
@@ -25,8 +26,8 @@ DEQuadrature.digits(100)
 f(x) = exp(10./abs2(x-z[1])).*cos(10./abs2(x-z[2]))./abs2(x-z[3])./abs(x-z[4])
 z = [complex(big(-2.0),1.0),complex(-1.0,.5),complex(1.0,0.25),complex(2.0,1.0)]
 
-u0,u,xpre = DEMapValues(z;domain=Infinite1)
-for i = 1:10
+@time u0,u,xpre = DEMapValues(z;domain=Infinite1)
+@time for i = 1:10
 	x,w = DENodesAndWeights(u0,u,2^i;domain=Infinite1)
 	val = dot(f(x),w)
 	err = abs(val-BigFloat(DEQuadrature.example4p2))
@@ -50,7 +51,7 @@ for i = 1:4
 	err = abs(val-BigFloat(DEQuadrature.example4p4))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
 end
-for i = 5:9
+@time for i = 5:9
 	(p,q) = SincPade(f(x),x,(length(x)-1)/2,i-2,i+2);
 	rootvec = PolyRoots(q);
 	x,w = DENodesAndWeights(convert(Vector{Complex{BigFloat}},rootvec[end-4:2:end]),2^i;domain=SemiInfinite2,Hint=25)
@@ -75,8 +76,8 @@ val = zeros(BigFloat,10)
 z = [complex(big(0.0),big(0.2))]
 f(x) = exp(-x.^8/2+cos(10x))./(1+25x.^2)
 
-u0,u,xpre = DEMapValues(z;ga=big(8.0),domain=Infinite2)
-for i = 1:10
+@time u0,u,xpre = DEMapValues(z;ga=big(8.0),domain=Infinite2)
+@time for i = 1:10
 	x,w = DENodesAndWeights(u0,u,2^i;b2factor=u0^7/2^9,ga=big(8.0),domain=Infinite2)
 	val[i] = dot(f(x),w)
 	println("Order: ",i," Value: ",val[i])
