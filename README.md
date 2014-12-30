@@ -1,19 +1,19 @@
 # DEQuadrature
 
-The aims of this `Julia` package are: to be the fastest general purpose quadrature package, 
-supporting the canonical interval, and semi-infinite and infinite domains in arithmetic up to 
-and including `BigFloat`; and, to provide support for maximizing convergence rates when complex 
-singularities are present near the contour of integration. Since the package can handle integrable 
-algebraic and logarithmic endpoint singularities, and since it allows the user to consider other 
+The aims of this `Julia` package are: to be the fastest general purpose quadrature package,
+supporting the canonical interval, and semi-infinite and infinite domains in arithmetic up to
+and including `BigFloat`; and, to provide support for maximizing convergence rates when complex
+singularities are present near the contour of integration. Since the package can handle integrable
+algebraic and logarithmic endpoint singularities, and since it allows the user to consider other
 domains by declaring a new instance of the type `Domain`, the package is general purpose.
 
 The primary function of this module computes the nodes and weights
-of the trapezoidal rule, `dot(f(x),w)`, after a variable transformation induces 
+of the trapezoidal rule, `dot(f(x),w)`, after a variable transformation induces
 double exponential endpoint decay. In addition, the variable transformations
 maximize the convergence rate despite complex singularities near the solution interval.
 
 The secondary function of this module computes the parameters of the
-conformal map `h(t)` in Eq. (3.14) of <a href="http://arxiv.org/abs/1406.3320">[1]</a>. 
+conformal map `h(t)` in Eq. (3.14) of <a href="http://arxiv.org/abs/1406.3320">[1]</a>.
 This module requires the use of the Julia package Ipopt for solving the nonlinear program.
 
 ```julia
@@ -103,8 +103,8 @@ for i = 1:4
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
 end
 for i = 5:8
-	(p,q) = SincPade(f(x),x,(length(x)-1)/2,i-2,i+2);
-	rootvec = PolyRoots(q);
+	(p,q) = SincPade(f(x),x,(length(x)-1)/2,i-2,i+2)
+	rootvec = PolyRoots(q)
 	x,w = DENodesAndWeights(convert(Vector{Complex{BigFloat}},rootvec[end-4:2:end]),2^i;domain=SemiInfinite2,Hint=25)
 	val = dot(f(x),w)
 	err = abs(val-BigFloat(DEQuadrature.example4p4))
@@ -115,7 +115,7 @@ end
 
 # References:
 
- 
+
    1.	R. M. Slevinsky and S. Olver. <a href="http://arxiv.org/abs/1406.3320">On the use of conformal maps
 		for the acceleration of convergence of the trapezoidal rule
-		and Sinc numerical methods</a>, arXiv:1406.3320, 2014.
+		and Sinc numerical methods</a>, arXiv:1406.3320, to appear in SIAM SISC, 2014.
