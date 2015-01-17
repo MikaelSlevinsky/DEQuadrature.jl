@@ -1,4 +1,4 @@
-# DEQuadrature
+# DEQuadrature.jl
 
 The aims of this `Julia` package are: to be the fastest general purpose quadrature package,
 supporting the canonical interval, and semi-infinite and infinite domains in arithmetic up to
