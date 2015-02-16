@@ -16,7 +16,8 @@ x,w = DENodesAndWeights(Complex{typeof(ga)}[],n;ga=ga)
 a,b,α,β = -one(T),one(T),-one(T)/2,-one(T)/2
 singularities{T<:Number}(a::T,b::T,α::T,β::T) = exp2sinhv.^α.*((b-a)./(exp2sinhv+1)).^(α+β)
 
-f(c,x) = clenshaw(ApproxFun.interlace(c,zero(c)),x)
+sp = Chebyshev(Interval([-1.,1.]))
+f(c,x) = Fun(ApproxFun.interlace(c,zero(c)),sp)[x]
 f3(c,x) = DEconv2(y->f(c,y),z->DEconv(y->f(c,y),a,b,α,β,z),a,b,α,β,x)
 function ∂f3∂c!(c,z,DATA)
     DATA[:,1] = DEconv(y->f(c,y),a,b,α,β,(z-a)/2 + (a-z)/2*x)
