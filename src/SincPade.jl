@@ -20,6 +20,6 @@ function PolyRoots(q)
 	s = length(q)
 	M = diagm(ones(s-1),-1)
 	M[1,:] -= q'
-	(D,V) = eig(M)
+	D = eigvals(M)
 	return 1.0./D
 end
