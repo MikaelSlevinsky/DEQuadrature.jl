@@ -119,4 +119,4 @@ end
    1.	R. M. Slevinsky and S. Olver. <a href="http://dx.doi.org/10.1137/140978363">On the use of conformal maps
 		for the acceleration of convergence of the trapezoidal rule
 		and Sinc numerical methods</a>, SIAM J. Sci. Comput., 37:A676--A700, 2015.
-    <a href="http://arxiv.org/abs/1406.3320"> arXiv:1406.3320</a>
+    An earlier version appears here: <a href="http://arxiv.org/abs/1406.3320"> arXiv:1406.3320</a>.
