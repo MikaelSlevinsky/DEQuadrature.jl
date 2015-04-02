@@ -13,14 +13,14 @@ double exponential endpoint decay. In addition, the variable transformations
 maximize the convergence rate despite complex singularities near the solution interval.
 
 The secondary function of this module computes the parameters of the
-conformal map `h(t)` in Eq. (3.14) of <a href="http://arxiv.org/abs/1406.3320">[1]</a>.
+conformal map `h(t)` in Eq. (3.14) of <a href="http://dx.doi.org/10.1137/140978363">[1]</a>.
 This module requires the use of the Julia package Ipopt for solving the nonlinear program.
 
 ```julia
 using DEQuadrature
 ```
 
-### Example 4.1 from <a href="http://arxiv.org/abs/1406.3320">[1]</a>
+### Example 4.1 from <a href="http://dx.doi.org/10.1137/140978363">[1]</a>
 
 Suppose we are interested in calculating the integral of:
 
@@ -46,7 +46,7 @@ for i = 1:6
 end
 ```
 
-### Example 4.2 from <a href="http://arxiv.org/abs/1406.3320">[1]</a>
+### Example 4.2 from <a href="http://dx.doi.org/10.1137/140978363">[1]</a>
 
 The package has equal support for `BigFloat`s, making high precision calculations a breeze! Suppose we are interested in calculating the integral of:
 
@@ -78,7 +78,7 @@ for i = 1:10
 end
 ```
 
-### Example 4.4 from <a href="http://arxiv.org/abs/1406.3320">[1]</a>
+### Example 4.4 from <a href="http://dx.doi.org/10.1137/140978363">[1]</a>
 
 Suppose we are interested in calculating the integral of:
 
@@ -116,6 +116,7 @@ end
 # References:
 
 
-   1.	R. M. Slevinsky and S. Olver. <a href="http://arxiv.org/abs/1406.3320">On the use of conformal maps
+   1.	R. M. Slevinsky and S. Olver. <a href="http://dx.doi.org/10.1137/140978363">On the use of conformal maps
 		for the acceleration of convergence of the trapezoidal rule
-		and Sinc numerical methods</a>, arXiv:1406.3320, to appear in SIAM SISC, 2014.
+		and Sinc numerical methods</a>, SIAM J. Sci. Comput., 37:A676--A700, 2015.
+    <a href="http://arxiv.org/abs/1406.3320"> arXiv:1406.3320</a>
