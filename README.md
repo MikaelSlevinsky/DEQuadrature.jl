@@ -97,7 +97,7 @@ We use the package functions `sincpade` and `polyroots` to compute the approxima
 ```julia
 x = zeros(BigFloat,5);
 for i = 1:4
-	x,w = DENodesAndWeights(Complex{BigFloat}[],2^i;domain=SemiInfinite2)
+	x,w = DENodesAndWeights(Complex{BigFloat}[],2^i;domain=SemiInfinite2(BigFloat))
 	val = dot(f(x),w)
 	err = abs(val-BigFloat(DEQuadrature.example4p4))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
@@ -105,7 +105,7 @@ end
 for i = 5:8
 	(p,q) = sincpade(f(x),x,(length(x)-1)/2,i-2,i+2)
 	rootvec = polyroots(q)
-	x,w = DENodesAndWeights(convert(Vector{Complex{BigFloat}},rootvec[end-4:2:end]),2^i;domain=SemiInfinite2,Hint=25)
+	x,w = DENodesAndWeights(convert(Vector{Complex{BigFloat}},rootvec[end-4:2:end]),2^i;domain=SemiInfinite2(BigFloat),Hint=25)
 	val = dot(f(x),w)
 	err = abs(val-BigFloat(DEQuadrature.example4p4))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
