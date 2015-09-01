@@ -60,7 +60,7 @@ function DENodesAndWeights{T<:Number}(h::ConformalMap{T},n::Int;b2factor::T=one(
     hs = log(2*convert(T,pi)*dDEopt*gaopt*n/b2opt)/gaopt/n
     hsk=linspace(-hs*n,hs*n,2n+1);hhsk=hfast(h,hsk)
 
-    x,w = domain.ψ(hhsk),hs*domain.ψp(hhsk).*singularities(domain,hhsk).*hpfast(h,hsk)
+    x,w = ψ(domain,hhsk),hs*ψp(domain,hhsk).*singularities(domain,hhsk).*hpfast(h,hsk)
     cutoff = !isinf(x).*!isnan(x).*!isinf(w).*!isnan(w)
     return x[cutoff],w[cutoff]
 end
@@ -93,7 +93,7 @@ function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),domain::Domai
     # x are the x-coordinates of the pre-images x +/- i pi/2γ of the singularities.
     #
 
-    ψinvz = domain.ψinv(z)
+    ψinvz = ψinv(domain,z)
     global n = length(z)
     global dat = convert(Vector{Float64},real(ψinvz))
     global ept = convert(Vector{Float64},abs(imag(ψinvz)))
