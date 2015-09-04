@@ -99,8 +99,6 @@ function eval_jac_g(x, mode, rows, cols, values)
 end
 
 function eval_Hess_f(x, Hess_f)
-    # Bad: grad_f    = zeros(4)  # Allocates new array
-    # OK:  grad_f[:] = zeros(4)  # Modifies 'in place'
     Hess_f[:,:] = zeros(2n,2n)
     @inbounds for r=1:n
         @inbounds for p=1:n
