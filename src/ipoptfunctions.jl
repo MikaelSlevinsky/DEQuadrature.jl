@@ -122,7 +122,7 @@ function eval_Hess_f(x, Hess_f)
             end
         Hess_f[r,p] = r == p? -(temp2*imag(temp6)-imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)-2*temp1*sinh(x[p])*spg)/temp2^3 - cosh(x[r])*spg*(temp1/temp2^2): (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)-2*temp1*sinh(x[p])*spg)/temp2^3
         Hess_f[r,n+p] = (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
-        Hess_f[n+r,p] = (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
+        Hess_f[n+p,r] = (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
         end    
     end
 end
