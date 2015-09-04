@@ -98,8 +98,8 @@ function eval_jac_g(x, mode, rows, cols, values)
     end
 end
 
-function eval_Hess_f(x, Hess_f)
-    Hess_f[:,:] = zeros(2n,2n)
+function eval_h(x, h)
+    h[:,:] = zeros(2n,2n)
     @inbounds for r=1:n
         @inbounds for p=1:n
         temp1=0.0
@@ -120,9 +120,9 @@ function eval_Hess_f(x, Hess_f)
                 temp6+=x[n+k]*(k-1)(k-2)*complex(x[r],pi/2gaopt)^(k-3)
                 temp7+=x[n+k]*(k-1)*complex(x[p],pi/2gaopt)^(k-2)    
             end
-        Hess_f[r,p] = r == p? -(temp2*imag(temp6)-imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)-2*temp1*sinh(x[p])*spg)/temp2^3 - cosh(x[r])*spg*(temp1/temp2^2): (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)-2*temp1*sinh(x[p])*spg)/temp2^3
-        Hess_f[r,n+p] = (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
-        Hess_f[n+p,r] = (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
+        h[r,p] = r == p? -(temp2*imag(temp6)-imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)-2*temp1*sinh(x[p])*spg)/temp2^3 - cosh(x[r])*spg*(temp1/temp2^2): (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)-2*temp1*sinh(x[p])*spg)/temp2^3
+        h[r,n+p] = (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
+        h[n+p,r] = (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
         end    
     end
 end
