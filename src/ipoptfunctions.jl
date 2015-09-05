@@ -98,31 +98,41 @@ function eval_jac_g(x, mode, rows, cols, values)
     end
 end
 
-function eval_h(x, h)
-    h[:,:] = zeros(2n,2n)
-    @inbounds for r=1:n
-        @inbounds for p=1:n
-        temp1=0.0
-        temp2=0.0
-        temp4=0.0
-        temp5=0.0
-        temp6=0.0
-        temp7=0.0
-            @inbounds for k=1:n
-                temp3=0.0
-                @inbounds for j=1:n
-                    temp3+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
+function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
+    if mode == :Structure
+        idx = 1
+        for row = 1:2n, col = 1:2n
+            rows[idx] = row
+            cols[idx] = col
+            idx += 1
+        end
+    else
+        values[:] = zeros(2n,2n)
+        @inbounds for r=1:n
+            @inbounds for p=1:n
+            temp1=0.0
+            temp2=0.0
+            temp4=0.0
+            temp5=0.0
+            temp6=0.0
+            temp7=0.0
+                @inbounds for k=1:n
+                    temp3=0.0
+                    @inbounds for j=1:n
+                        temp3+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
+                    end
+                    temp1+=ept[k]-imag(temp3)
+                    temp2+=cosh(x[k])*spg
+                    temp4+=x[n+k]*(k-1)*complex(x[r],pi/2gaopt)^(k-2)
+                    temp5+=complex(x[k],pi/2gaopt)^(r-1)
+                    temp6+=x[n+k]*(k-1)(k-2)*complex(x[r],pi/2gaopt)^(k-3)
+                    temp7+=x[n+k]*(k-1)*complex(x[p],pi/2gaopt)^(k-2)
                 end
-                temp1+=ept[k]-imag(temp3)
-                temp2+=cosh(x[k])*spg
-                temp4+=x[n+k]*(k-1)*complex(x[r],pi/2gaopt)^(k-2)
-                temp5+=complex(x[k],pi/2gaopt)^(r-1)
-                temp6+=x[n+k]*(k-1)(k-2)*complex(x[r],pi/2gaopt)^(k-3)
-                temp7+=x[n+k]*(k-1)*complex(x[p],pi/2gaopt)^(k-2)    
+            # Must be indexed via values, like the jacobian of the constraint functions.
+            #h[r,p] = r == p? -(temp2*imag(temp6)-imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)-2*temp1*sinh(x[p])*spg)/temp2^3 - cosh(x[r])*spg*(temp1/temp2^2): (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)-2*temp1*sinh(x[p])*spg)/temp2^3
+            #h[r,n+p] = (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
+            #h[n+p,r] = (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
             end
-        h[r,p] = r == p? -(temp2*imag(temp6)-imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)-2*temp1*sinh(x[p])*spg)/temp2^3 - cosh(x[r])*spg*(temp1/temp2^2): (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)-2*temp1*sinh(x[p])*spg)/temp2^3
-        h[r,n+p] = (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
-        h[n+p,r] = (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
-        end    
+        end
     end
 end
