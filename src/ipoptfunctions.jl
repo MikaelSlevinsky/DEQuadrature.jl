@@ -98,7 +98,6 @@ function eval_jac_g(x, mode, rows, cols, values)
     end
 end
 
-
 function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
     # Symmetric matrix, fill the lower left triangle only
     if mode == :Structure
@@ -112,9 +111,9 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
             idx += 1
         end
     else
-        h = zeros(2n,2n)
+        values[:] = zeros(n*(2n+1))
         @inbounds for r=1:n
-            @inbounds for p=1:n
+            @inbounds for p=1:r
             temp1=0.0
             temp2=0.0
             temp4=0.0
@@ -132,23 +131,14 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                     temp5+=complex(x[k],pi/2gaopt)^(r-1)
                     temp6+=x[n+k]*(k-1)(k-2)*complex(x[r],pi/2gaopt)^(k-3)
                     temp7+=x[n+k]*(k-1)*complex(x[p],pi/2gaopt)^(k-2)
-                end     
-            h[r,p] = r == p? -(temp2*imag(temp6)-imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)-2*temp1*sinh(x[p])*spg)/temp2^3 - cosh(x[r])*spg*(temp1/temp2^2): (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)-2*temp1*sinh(x[p])*spg)/temp2^3 
-            h[n+r,p] = (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
-            end  
-        end
-        # Once I have constructed the matrix h, I can use the mapping
-        # i - > [floor(sqrt(2*i)+1/2) , i-((floor((1/2)*sqrt(8*i-7)+1/2)-1))*floor((1/2)*sqrt(8*i-7)+1/2)/2)]
-        #  to assign the matrix values to the vector Values. i.e.
-        # 1 -> (1,1) , 2-> (2,1), 3-> (2,2), etc.
-        # Not the most efficient way to code it but I can't seem to find the inverse mapping that takes the values:
-        # (1,1) -> 1 , (2,1) -> 2 , (2,2)->3 , (3,1)-> 4, (3,2) -> 5, (3,3) -> 6, (4,1) ->7 etc.
-        values[:] = zeros(n*(2n+1))
-        @inbounds for i = 1:n*(2n+1)
-                    values[i] =  obj_factor*h[floor(sqrt(2*i)+1/2) , i-((floor((1/2)*sqrt(8*i-7)+1/2)-1))*floor((1/2)*sqrt(8*i-7)+1/2)/2]
-                  end
+                end
+            values[r*(r-1)/2+p] = obj_factor*(r == p? -(temp2*imag(temp6)-imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)-2*temp1*sinh(x[p])*spg)/temp2^3 - cosh(x[r])*spg*(temp1/temp2^2): (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)-2*temp1*sinh(x[p])*spg)/temp2^3  )      
+            values[(n+r)*(n+r-1)/2+p] = obj_factor*((-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2)
+            end
         #TO_DO I'm still trying to figure out how you coded your constraints. If you have time, could you send me a 
         # pdf latex file similar to what I had for the objective function describing your development for the gradient of
         # the constraints.
+        end
     end
 end
+
