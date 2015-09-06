@@ -133,9 +133,9 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                     temp7+=x[n+k]*(k-1)*complex(x[p],pi/2gaopt)^(k-2)
                 end
                 if r<=n
-                values[int(r*(r-1)/2+p)] =  (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 - (r == p? imag(temp6)/temp2 + cosh(x[r])*spg*(temp1/temp2^2) : 0.0 )
+                values[int(r*(r-1)/2+p)] = obj_factor*((imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 - (r == p? imag(temp6)/temp2 + cosh(x[r])*spg*(temp1/temp2^2) : 0.0 ))
                 else
-                values[int(r*(r-1)/2+p)] = p>n? 0.0: (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
+                values[int(r*(r-1)/2+p)] = obj_factor*(p>n? 0.0: (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2)
                 end
             end  
         end
