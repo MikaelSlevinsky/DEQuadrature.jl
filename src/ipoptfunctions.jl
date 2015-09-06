@@ -112,7 +112,7 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         end
     else
         values[:] = zeros(n*(2n+1))
-        @inbounds for r=1:n
+        @inbounds for r=1:2n
             @inbounds for p=1:r
             temp1=0.0
             temp2=0.0
@@ -129,16 +129,19 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                     temp2+=cosh(x[k])*spg
                     temp4+=x[n+k]*(k-1)*complex(x[r],pi/2gaopt)^(k-2)
                     temp5+=complex(x[k],pi/2gaopt)^(r-1)
-                    temp6+=x[n+k]*(k-1)(k-2)*complex(x[r],pi/2gaopt)^(k-3)
+                    temp6+=x[n+k]*(k-1)*(k-2)*complex(x[r],pi/2gaopt)^(k-3)
                     temp7+=x[n+k]*(k-1)*complex(x[p],pi/2gaopt)^(k-2)
                 end
-            values[r*(r-1)/2+p] = obj_factor*(r == p? -(temp2*imag(temp6)-imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)-2*temp1*sinh(x[p])*spg)/temp2^3 - cosh(x[r])*spg*(temp1/temp2^2): (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)-2*temp1*sinh(x[p])*spg)/temp2^3  )      
-            values[(n+r)*(n+r-1)/2+p] = obj_factor*((-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2)
-            end
-        #TO_DO I'm still trying to figure out how you coded your constraints. If you have time, could you send me a 
-        # pdf latex file similar to what I had for the objective function describing your development for the gradient of
-        # the constraints.
+                if r<=n
+                values[int(r*(r-1)/2+p)] =  (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 - (r == p? imag(temp6)/temp2 + cosh(x[r])*spg*(temp1/temp2^2) : 0.0 )
+                else
+                values[int(r*(r-1)/2+p)] = p>n? 0.0: (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
+                end
+            end  
         end
     end
 end
 
+        #TO_DO I'm still trying to figure out how you coded your constraints. If you have time, could you send me a 
+        # pdf latex file similar to what I had for the objective function describing your development for the gradient of
+        # the constraints.
