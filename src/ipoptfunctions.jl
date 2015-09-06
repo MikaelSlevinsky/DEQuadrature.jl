@@ -106,9 +106,10 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         idx = 1
         for row = 1:2n
             for col = 1:row
-            rows[idx] = row
-            cols[idx] = col
-            idx += 1
+                rows[idx] = row
+                cols[idx] = col
+                idx += 1
+            end
         end
     else
         values[:] = zeros(n*(2n+1))
@@ -120,23 +121,23 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
             temp5=0.0
             temp6=0.0
             temp7=0.0
-                @inbounds for k=1:n
-                    temp3=0.0
-                    @inbounds for j=1:n
-                        temp3+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
+            @inbounds   for k=1:n
+                            temp3=0.0
+                 @inbounds  for j=1:n
+                                temp3+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
+                            end
+                            temp1+=ept[k]-imag(temp3)
+                            temp2+=cosh(x[k])*spg
+                            temp4+=x[n+k]*(k-1)*complex(x[r],pi/2gaopt)^(k-2)
+                            temp5+=complex(x[k],pi/2gaopt)^(r-1)
+                            temp6+=x[n+k]*(k-1)*(k-2)*complex(x[r],pi/2gaopt)^(k-3)
+                            temp7+=x[n+k]*(k-1)*complex(x[p],pi/2gaopt)^(k-2)
+                        end
+                    if r<=n
+                        values[int(r*(r-1)/2+p)] = obj_factor*((imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 - (r == p? imag(temp6)/temp2 + cosh(x[r])*spg*(temp1/temp2^2) : 0.0 ))
+                    else
+                        values[int(r*(r-1)/2+p)] = obj_factor*(p>n? 0.0: (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2)
                     end
-                    temp1+=ept[k]-imag(temp3)
-                    temp2+=cosh(x[k])*spg
-                    temp4+=x[n+k]*(k-1)*complex(x[r],pi/2gaopt)^(k-2)
-                    temp5+=complex(x[k],pi/2gaopt)^(r-1)
-                    temp6+=x[n+k]*(k-1)*(k-2)*complex(x[r],pi/2gaopt)^(k-3)
-                    temp7+=x[n+k]*(k-1)*complex(x[p],pi/2gaopt)^(k-2)
-                end
-                if r<=n
-                values[int(r*(r-1)/2+p)] = obj_factor*((imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 - (r == p? imag(temp6)/temp2 + cosh(x[r])*spg*(temp1/temp2^2) : 0.0 ))
-                else
-                values[int(r*(r-1)/2+p)] = obj_factor*(p>n? 0.0: (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2)
-                end
             end  
         end
     end
