@@ -113,6 +113,10 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         end
     else
         values[:] = zeros(n*(2n+1))
+        constraints = zeros(n*(2n+1))
+        grad_f = zeros(2n)
+        f = eval_f(x)
+        eval_grad_f(x,grad_f)  
         @inbounds for r=1:2n
             @inbounds for p=1:r
             temp1=0.0
@@ -125,20 +129,26 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                             temp3=0.0
                  @inbounds  for j=1:n
                                 temp3+=x[n+j]*complex(x[k],pi/2gaopt)^(j-1)
-                            end
+                            end # for j
                             temp1+=ept[k]-imag(temp3)
                             temp2+=cosh(x[k])*spg
                             temp4+=x[n+k]*(k-1)*complex(x[r],pi/2gaopt)^(k-2)
                             temp5+=complex(x[k],pi/2gaopt)^(r-1)
                             temp6+=x[n+k]*(k-1)*(k-2)*complex(x[r],pi/2gaopt)^(k-3)
-                            temp7+=x[n+k]*(k-1)*complex(x[p],pi/2gaopt)^(k-2)
-                        end
-values[int(r*(r-1)/2+p)] =  obj_factor*(r<=n? ((imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 - (r == p? imag(temp6)/temp2 + cosh(x[r])*spg*(temp1/temp2^2) : 0.0 )) :  (p>n? 0.0: (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2) )    
-            end  
-        end
-    end
-end
-
-        #TO_DO I'm still trying to figure out how you coded your constraints. If you have time, could you send me a 
-        # pdf latex file similar to what I had for the objective function describing your development for the gradient of
-        # the constraints.
+                            temp7+=x[n+k]*(k-1)*complex(x[p],pi/2gaopt)^(k-2)                
+                        end # for k
+            values[int(r*(r-1)/2+p)] =  (r<=n? ((imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 - (r == p? imag(temp6)/temp2 + cosh(x[r])*spg*(temp1/temp2^2) : 0.0 )) :  (p>n? 0.0: (-temp2*imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2) )    
+                for kk =1:2n        
+                    if kk<=n
+                        constraints[int(r*(r-1)/2+p)] += lambda[kk]*(r<=n? values[int(r*(r-1)/2+p)]*sinh(x[kk])*cpg + (kk==p?  grad_f[r]*cosh(x[p])*cpg : 0.0) + (kk==r?  grad_f[p]*cosh(x[r])*cpg : 0.0) + (kk==r==p?  f*sinh(x[p])*cpg+real(temp6) : 0.0)  : (p>n? 0.0 : values[int((n+r)*(n+r-1)/2+p)]*sinh(x[kk])*cpg + (k==p?  grad_f[r]*cosh(x[p])*cpg + real((r-1)*complex(x[p],pi/2gaopt)^(r-2)) : 0.0) ) )
+                    elseif kk>n && kk<2n
+                        constraints[int(r*(r-1)/2+p)] += lambda[kk]*(r<=n? values[int(r*(r-1)/2+p)]*cosh(x[kk])*spg + (kk==p?  grad_f[r]*sinh(x[p])*spg : 0.0) + (kk==r?  grad_f[p]*sinh(x[r])*spg : 0.0) + (kk==r==p?  f*cosh(x[p])*spg+imag(temp6) : 0.0)  : (p>n? 0.0 : values[int((n+r)*(n+r-1)/2+p)]*cosh(x[kk])*spg + (k==p?  grad_f[r]*sinh(x[p])*spg + imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) : 0.0) ) )
+                    else
+                        constraints[int(r*(r-1)/2+p)] += 0.0    
+                    end
+                end #for kk
+                values[int(r*(r-1)/2+p)]  = obj_factor*values[int(r*(r-1)/2+p)] + constraints[int(r*(r-1)/2+p)]
+            end  # for p
+        end # for r
+    end # if loop
+end # function
