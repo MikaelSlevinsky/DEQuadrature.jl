@@ -124,31 +124,47 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                 temp4=0.0
                 temp5=0.0
                 temp6=0.0
-                for k=1:n
-                    temp3=0.0
+                 #values[int(r*(r-1)/2+p)] =  (r<=n? ((imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 - (r == p? imag(temp6)/temp2 + cosh(x[r])*spg*(temp1/temp2^2) : 0.0 )) :  (p>n? 0.0: (-temp2*imag((r-1)*xpg[p]^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2) )
+                if r<=n && p<r # ∂^2 f / ∂x_r ∂x_p
+                    for k=1:n
+                        temp3=0.0
                     for j=1:n
                         temp3+=x[n+j]*xpg[k]^(j-1)
                     end # for j
-                    temp1+=ept[k]-imag(temp3)
-                    temp2+=cosh(x[k])*spg
-                    temp4+=x[n+k]*(k-1)*xpg[r]^(k-2)
-                    temp5+=xpg[k]^(r-1)
-                    temp6+=x[n+k]*(k-1)*(k-2)*xpg[r]^(k-3)
-                    temp7+=x[n+k]*(k-1)*xpg[p]^(k-2)
-                end # for k
-                #values[int(r*(r-1)/2+p)] =  (r<=n? ((imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 - (r == p? imag(temp6)/temp2 + cosh(x[r])*spg*(temp1/temp2^2) : 0.0 )) :  (p>n? 0.0: (-temp2*imag((r-1)*xpg[p]^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2) )
+                        temp1+=ept[k]-imag(temp3)
+                        temp2+=cosh(x[k])*spg
+                        temp4+=x[n+k]*(k-1)*xpg[r]^(k-2)
+                        temp7+=x[n+k]*(k-1)*xpg[p]^(k-2)                    
+                    end # for k
+                values[int(r*(r-1)/2+p)] = (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 
                 
-                if r<=n && p<r # ∂^2 f / ∂x_r ∂x_p
-                    values[int(r*(r-1)/2+p)] = (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 
-                elseif r<=n && p == r # ∂^2 f / ∂x_r^2
-                    values[int(r*(r-1)/2+p)] = (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 - (imag(temp6)/temp2 + cosh(x[r])*spg*(temp1/temp2^2))          
+                elseif r<=n && p == r # ∂^2 f / ∂x_r^
+                    for k=1:n
+                        temp3=0.0
+                    for j=1:n
+                        temp3+=x[n+j]*xpg[k]^(j-1)
+                    end # for j
+                        temp1+=ept[k]-imag(temp3)
+                        temp2+=cosh(x[k])*spg
+                        temp4+=x[n+k]*(k-1)*xpg[r]^(k-2)
+                        temp7+=x[n+k]*(k-1)*xpg[p]^(k-2)    
+                        temp6+=x[n+k]*(k-1)*(k-2)*xpg[r]^(k-3)
+                    end # for k
+                values[int(r*(r-1)/2+p)] = (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 - (imag(temp6)/temp2 + cosh(x[r])*spg*(temp1/temp2^2))          
+                
                 elseif r>n && p<n # ∂^2 f / ∂u_r ∂ x_p = ∂^2 f / ∂x_{n+r} ∂ x_p
-                    values[int(r*(r-1)/2+p)] = (-temp2*imag((r-1)*xpg[p]^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
+                    for k=1:n
+                        temp2+=cosh(x[k])*spg
+                        temp5+=xpg[k]^(r-1)
+                    end # for k
+                values[int(r*(r-1)/2+p)] = (-temp2*imag((r-1)*xpg[p]^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
+                
                 else # ∂^2 f / ∂u_r ∂ u_p = ∂^2 f / ∂x_{n+r} ∂ x_{n+p} 
-                    values[int(r*(r-1)/2+p)] = 0.0
+                values[int(r*(r-1)/2+p)] = 0.0
                 end
             end # for p       
         end # for r
+
 # THE CONSTRAINTS
         for k =1:n-1
             for r=1:2n
@@ -201,3 +217,19 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         values[:] = obj_factor*values[:] + constraints[:]
     end # if loop
 end # function
+
+#= Fun example
+using SincFun, DEQuadrature
+z = [complex((-2.0),1.0),complex(-1.0,.5),complex(1.0,0.25),complex(2.0,1.0)]
+ga =1.0
+ψinvz = ψinv(Finite(-1.0,1.0,-0.5,0.0,0.0,1.0),z)
+    global n = length(z)
+    global dat = convert(Vector{Float64},real(ψinvz))
+    global ept = convert(Vector{Float64},abs(imag(ψinvz)))
+    global gaopt = convert(Float64,ga)
+    global spg = sinpi(1/2gaopt)
+    global cpg = cospi(1/2gaopt)
+
+srand(1234); x = rand(2*n)
+eval_h(x,2.0,zeros(2n),zeros(2n),2.0,rand(2n),zeros(n*(2n+1)))
+=#
