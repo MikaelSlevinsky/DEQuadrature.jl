@@ -100,6 +100,7 @@ function eval_jac_g(x, mode, rows, cols, values)
         @inbounds values[4n^2-n] = 1.0
     end
 end
+
 function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
     if mode == :Structure
         idx = 1
