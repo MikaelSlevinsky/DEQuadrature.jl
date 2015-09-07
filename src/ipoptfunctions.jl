@@ -165,7 +165,7 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         end
         
         # case 3) ∂^2 f / ∂u_r ∂ x_p = ∂^2 f / ∂x_{n+r} ∂ x_p (r>n , p<=n)
-        for r=n+1:2n
+        for r=(n+1):2n
             for p=1:n
                 temp2 = 0.0
                 temp5 = 0.0
