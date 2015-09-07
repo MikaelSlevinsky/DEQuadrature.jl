@@ -166,7 +166,7 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                     elseif r>n && p<n
                         # ∂^2 g_{k} / ∂u_r ∂ x_p = ∂^2 g_{k} / ∂x_{n+r} ∂ x_p   &&  ∂^2 g_{n+k} / ∂x_{n+r} ∂x_p
                         constraints[int(r*(r-1)/2+p)] += lambda[k]*(values[int((n+r)*(n+r-1)/2+p)]*sinh(x[k])*cpg + (k==p?  grad_f[r]*cosh(x[p])*cpg + real((r-1)*xpg[p]^(r-2)) : 0.0) ) 
-                        constraints[int(r*(r-1)/2+p)] += lambda[n+k]*( values[int((n+r)*(n+r-1)/2+p)]*cosh(x[(k+n)])*spg + ((k+n)==p?  grad_f[r]*sinh(x[p])*spg + imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) : 0.0) ) 
+                        constraints[int(r*(r-1)/2+p)] += lambda[n+k]*( values[int((n+r)*(n+r-1)/2+p)]*cosh(x[(k+n)])*spg + ((k+n)==p?  grad_f[r]*sinh(x[p])*spg + imag((r-1)*xpg[p]^(r-2)) : 0.0) ) 
                     else
                         # ∂^2 g_{k} / ∂u_r ∂ u_p = ∂^2 g_{k} / ∂x_{n+r} ∂ x_{n+p}  &&    ∂^2 g_{n+k} / ∂x_{n+r} ∂ x_{n+p} 
                         constraints[int(r*(r-1)/2+p)] += lambda[k]*0.0
