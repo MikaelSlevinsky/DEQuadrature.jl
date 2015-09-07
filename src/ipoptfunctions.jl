@@ -116,7 +116,8 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         f = eval_f(x)
         eval_grad_f(x,grad_f)
         xpg = complex(x[1:n],pi/2gaopt)
-        
+        sinhxs,coshxs = sinh(x[1:n])*spg,cosh(x[1:n])*spg
+        sinhxc,coshxc = sinh(x[1:n])*cpg,cosh(x[1:n])*cpg
         # ∂^2 f / ∂x_r ∂x_p (r<=n, p<r)
         for r=1:n
             temp7=0.0 
@@ -134,7 +135,7 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                     temp4+=x[n+k]*(k-1)*xpg[r]^(k-2)
                     temp7+=x[n+k]*(k-1)*xpg[p]^(k-2)                    
                 end # for k
-            values[int(r*(r-1)/2+p)] = (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 
+            values[int(r*(r-1)/2+p)] = (imag(temp4)*sinhxs[p])/temp2^2 + sinhxs[r]*(temp2*imag(temp7)+2*temp1*sinhxs[p])/temp2^3 
             end
         end
 
@@ -154,7 +155,7 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                 temp4+=x[n+k]*(k-1)*xpg[r]^(k-2)
                 temp6+=x[n+k]*(k-1)*(k-2)*xpg[r]^(k-3)
             end # for k
-        values[int(r*(r-1)/2+r)] = (imag(temp4)*sinh(x[r])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp4)+2*temp1*sinh(x[r])*spg)/temp2^3 - (imag(temp6)/temp2 + cosh(x[r])*spg*(temp1/temp2^2))          
+        values[int(r*(r-1)/2+r)] = (imag(temp4)*sinhxs[r])/temp2^2 + sinhxs[r]*(temp2*imag(temp4)+2*temp1*sinhxs[r])/temp2^3 - (imag(temp6)/temp2 + coshxs[r]*(temp1/temp2^2))          
         end
         
         # ∂^2 f / ∂u_r ∂ x_p = ∂^2 f / ∂x_{n+r} ∂ x_p (r>n , p<=n)
@@ -166,10 +167,11 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                     temp2+=cosh(x[k])*spg
                     temp5+=xpg[k]^(r-1)
                 end # for k
-            values[int(r*(r-1)/2+p)] = (-temp2*imag((r-1)*xpg[p]^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
+            values[int(r*(r-1)/2+p)] = (-temp2*imag((r-1)*xpg[p]^(r-2)) + sinhxs[p]*imag(temp5))/temp2^2
             end
         end
         # ∂^2 f / ∂u_r ∂ u_p = ∂^2 f / ∂x_{n+r} ∂ x_{n+p} == 0 (r>n,p>n)
+        
 # THE CONSTRAINTS
         for k =1:n-1
             for r=1:2n
