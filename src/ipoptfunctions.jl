@@ -118,7 +118,13 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         xpg = complex(x[1:n],pi/2gaopt)
         sinhxs,coshxs = sinh(x[1:n])*spg,cosh(x[1:n])*spg
         sinhxc,coshxc = sinh(x[1:n])*cpg,cosh(x[1:n])*cpg
-        # ∂^2 f / ∂x_r ∂x_p (r<=n, p<r)
+        
+        # The objective values broken into three seperate cases:
+        # case 1) (r<=n, p<r) 
+        # case 2) (r<=n , p=r)
+        # case 3) (r>n , p<=n)
+        
+        # case 1) ∂^2 f / ∂x_r ∂x_p (r<=n, p<r)
         for r=1:n
             temp7=0.0 
             for p=1:(r-1)
@@ -139,7 +145,7 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
             end
         end
 
-        # ∂^2 f / ∂x_r^2 (r<=n , p=r)
+        # case 2) ∂^2 f / ∂x_r^2 (r<=n , p=r)
         for r=1:n
             temp1=0.0
             temp2=0.0
@@ -158,7 +164,7 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         values[int(r*(r-1)/2+r)] = (imag(temp4)*sinhxs[r])/temp2^2 + sinhxs[r]*(temp2*imag(temp4)+2*temp1*sinhxs[r])/temp2^3 - (imag(temp6)/temp2 + coshxs[r]*(temp1/temp2^2))          
         end
         
-        # ∂^2 f / ∂u_r ∂ x_p = ∂^2 f / ∂x_{n+r} ∂ x_p (r>n , p<=n)
+        # case 3) ∂^2 f / ∂u_r ∂ x_p = ∂^2 f / ∂x_{n+r} ∂ x_p (r>n , p<=n)
         for r=n+1:2n
             for p=1:n
                 temp2 = 0.0
@@ -170,7 +176,7 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
             values[int(r*(r-1)/2+p)] = (-temp2*imag((r-1)*xpg[p]^(r-2)) + sinhxs[p]*imag(temp5))/temp2^2
             end
         end
-        # ∂^2 f / ∂u_r ∂ u_p = ∂^2 f / ∂x_{n+r} ∂ x_{n+p} == 0 (r>n,p>n)
+        # case 4) ∂^2 f / ∂u_r ∂ u_p = ∂^2 f / ∂x_{n+r} ∂ x_{n+p} == 0 (r>n,p>n)
         
 # THE CONSTRAINTS
         for k =1:n-1
