@@ -100,7 +100,6 @@ function eval_jac_g(x, mode, rows, cols, values)
         @inbounds values[4n^2-n] = 1.0
     end
 end
-
 function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
     if mode == :Structure
         idx = 1
@@ -116,9 +115,8 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         f = eval_f(x)
         eval_grad_f(x,grad_f)
         xpg = complex(x[1:n],pi/2gaopt)
-        for r=1:n
-            temp7=0.0 # depends on p, right? (I'm not sure.)
-
+        for r=1:2n
+            temp7=0.0 
             for p=1:r
                 temp1=0.0
                 temp2=0.0
@@ -138,72 +136,59 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                     temp7+=x[n+k]*(k-1)*xpg[p]^(k-2)
                 end # for k
                 #values[int(r*(r-1)/2+p)] =  (r<=n? ((imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 - (r == p? imag(temp6)/temp2 + cosh(x[r])*spg*(temp1/temp2^2) : 0.0 )) :  (p>n? 0.0: (-temp2*imag((r-1)*xpg[p]^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2) )
-
-                # ∂^2 f / ∂x_r ∂ x_p
-                #values[int(r*(r-1)/2+p)] =
-
-                # ∂^2 f / ∂u_r ∂ x_p = ∂^2 f / ∂x_{n+r} ∂ x_p
-                #values[int((r+n)*(r+n-1)/2+p)] =
-            end # for p
-
-            # ∂^2 f / ∂x_r^2
-            #values[int(r*(r-1)/2+r)] =
+                
+                if r<=n && p<r
+                # ∂^2 f / ∂x_r ∂x_p
+                values[int(r*(r-1)/2+p)] = (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 
+                elseif r<=n && p == r
+                # ∂^2 f / ∂x_r^2
+                values[int(r*(r-1)/2+p)] = (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 - (imag(temp6)/temp2 + cosh(x[r])*spg*(temp1/temp2^2))          
+                elseif r>n && p<n
+                # ∂^2 f / ∂u_r ∂ x_p = ∂^2 f / ∂x_{n+r} ∂ x_p 
+                values[int(r*(r-1)/2+p)] = (-temp2*imag((r-1)*xpg[p]^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
+                else
+                # ∂^2 f / ∂u_r ∂ u_p = ∂^2 f / ∂x_{n+r} ∂ x_{n+p}     
+                values[int(r*(r-1)/2+p)] = 0.0
+                end
+            end # for p       
         end # for r
 
-        for k =1:n
-            for r=1:n
+        for k =1:2n
+            for r=1:2n
                 for p=1:r
 
-                    # requires a loop for temp6
-
-                    #constraints[int(r*(r-1)/2+p)] += lambda[k]*(r<=n? values[int(r*(r-1)/2+p)]*sinh(x[kk])*cpg + (kk==p?  grad_f[r]*cosh(x[p])*cpg : 0.0) + (kk==r?  grad_f[p]*cosh(x[r])*cpg : 0.0) + (kk==r==p?  f*sinh(x[p])*cpg+real(temp6) : 0.0)  : (p>n? 0.0 : values[int((n+r)*(n+r-1)/2+p)]*sinh(x[kk])*cpg + (kk==p?  grad_f[r]*cosh(x[p])*cpg + real((r-1)*xpg[p]^(r-2)) : 0.0) ) )
-
-                    # ∂^2 g_k / ∂x_r ∂x_p
-                    #constraints[int(r*(r-1)/2+p)] += lambda[k]*
-
-                    # ∂^2 g_{n+k} / ∂x_r ∂x_p
-                    if k < n
-                        #constraints[int(r*(r-1)/2+p)] += lambda[n+k]*
-                    else
-                        #constraints[int(r*(r-1)/2+p)] += lambda[2n]*0.0
+                    #a loop for temp6
+                    temp6 = 0.0
+                    for j=1:n
+                    temp6+=x[n+j]*(j-1)*(j-2)*xpg[r]^(j-3)
+                    end # for j
+                    
+                    if k<=n
+                        if r<=n
+                        # ∂^2 g_{k} / ∂x_r ∂x_p
+                        constraints[int(r*(r-1)/2+p)] += lambda[k]*(values[int(r*(r-1)/2+p)]*sinh(x[k])*cpg + (k==p?  grad_f[r]*cosh(x[p])*cpg : 0.0) + (k==r?  grad_f[p]*cosh(x[r])*cpg : 0.0) + (k==r==p?  f*sinh(x[p])*cpg+real(temp6) : 0.0) ) 
+                        elseif r>n && p<n
+                        # ∂^2 g_{k} / ∂u_r ∂ x_p = ∂^2 g_{k} / ∂x_{n+r} ∂ x_p 
+                        constraints[int(r*(r-1)/2+p)] += lambda[k]*(values[int((n+r)*(n+r-1)/2+p)]*sinh(x[k])*cpg + (k==p?  grad_f[r]*cosh(x[p])*cpg + real((r-1)*xpg[p]^(r-2)) : 0.0) ) 
+                        else
+                        # ∂^2 g_{k} / ∂u_r ∂ u_p = ∂^2 g_{k} / ∂x_{n+r} ∂ x_{n+p}     
+                        constraints[int(r*(r-1)/2+p)] += lambda[k]*0.0
+                        end   # if loop
+                    elseif k>n && k<2n
+                        if r<=n
+                        # ∂^2 g_{k} / ∂x_r ∂x_p
+                        constraints[int(r*(r-1)/2+p)] += lambda[k]*( values[int(r*(r-1)/2+p)]*cosh(x[k])*spg + (k==p?  grad_f[r]*sinh(x[p])*spg : 0.0) + (k==r?  grad_f[p]*sinh(x[r])*spg : 0.0) + (k==r==p?  f*cosh(x[p])*spg+imag(temp6) : 0.0) ) 
+                        elseif r>n && p<n
+                        # ∂^2 g_{k} / ∂u_r ∂ x_p = ∂^2 g_{k} / ∂x_{n+r} ∂ x_p 
+                        constraints[int(r*(r-1)/2+p)] += lambda[k]*( values[int((n+r)*(n+r-1)/2+p)]*cosh(x[k])*spg + (k==p?  grad_f[r]*sinh(x[p])*spg + imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) : 0.0) ) 
+                        else
+                        # ∂^2 g_{k} / ∂u_r ∂ u_p = ∂^2 g_{k} / ∂x_{n+r} ∂ x_{n+p}     
+                        constraints[int(r*(r-1)/2+p)] += lambda[k]*0.0
+                        end   # if loop 
                     end
-
-                    # ∂^2 g_k / ∂u_r ∂x_p = ∂^2 g_k / ∂x_{n+r} ∂x_p
-                    #constraints[int((n+r)*(n+r-1)/2+p)] += lambda[k]*
-
-                    # ∂^2 g_{n+k} / ∂x_{n+r} ∂x_p
-                    if k < n
-                        #constraints[int((n+r)*(n+r-1)/2+p)] += lambda[n+k]*
-                    else
-                        #constraints[int((n+r)*(n+r-1)/2+p)] += lambda[2n]*0.0
-                    end
-                end #for p
-                # ∂^2 g_k / ∂x_r ∂x_k
-                #constraints[int(r*(r-1)/2+k)] += lambda[k]*
-
-                # ∂^2 g_{n+k} / ∂x_r ∂x_k
-                if k < n
-                    #constraints[int(r*(r-1)/2+k)] += lambda[n+k]*
-                else
-                    #constraints[int(r*(r-1)/2+k)] += lambda[2n]*0.0
-                end
-
-                # ∂^2 g_k / ∂x_r ∂u_k = ∂^2 g_k / ∂x_r ∂x_{n+k}
-                #constraints[int(r*(r-1)/2+n+k)] += lambda[k]*
-
-                # ∂^2 g_{n+k} / ∂x_r ∂u_k = ∂^2 g_{n+k} / ∂x_r ∂u_{n+k}
-                if k < n
-                    #constraints[int(r*(r-1)/2+n+k)] += lambda[n+k]*
-                else
-                    #constraints[int(r*(r-1)/2+n+k)] += lambda[2n]*0.0
-                end
+                end # for p
             end # for r
-            # ∂^2 g_k / ∂x_k^2
-            #constraints[int(k*(k-1)/2+k)] += lambda[k]*
-            # ∂^2 g_{n+k} / ∂x_k^2
-            #constraints[int(k*(k-1)/2+k)] += lambda[n+k]*
         end # for k
-
         values[:] = obj_factor*values[:] + constraints[:]
     end # if loop
 end # function
