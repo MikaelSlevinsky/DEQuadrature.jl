@@ -137,18 +137,14 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                 end # for k
                 #values[int(r*(r-1)/2+p)] =  (r<=n? ((imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 - (r == p? imag(temp6)/temp2 + cosh(x[r])*spg*(temp1/temp2^2) : 0.0 )) :  (p>n? 0.0: (-temp2*imag((r-1)*xpg[p]^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2) )
                 
-                if r<=n && p<r
-                # ∂^2 f / ∂x_r ∂x_p
-                values[int(r*(r-1)/2+p)] = (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 
-                elseif r<=n && p == r
-                # ∂^2 f / ∂x_r^2
-                values[int(r*(r-1)/2+p)] = (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 - (imag(temp6)/temp2 + cosh(x[r])*spg*(temp1/temp2^2))          
-                elseif r>n && p<n
-                # ∂^2 f / ∂u_r ∂ x_p = ∂^2 f / ∂x_{n+r} ∂ x_p 
-                values[int(r*(r-1)/2+p)] = (-temp2*imag((r-1)*xpg[p]^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
-                else
-                # ∂^2 f / ∂u_r ∂ u_p = ∂^2 f / ∂x_{n+r} ∂ x_{n+p}     
-                values[int(r*(r-1)/2+p)] = 0.0
+                if r<=n && p<r # ∂^2 f / ∂x_r ∂x_p
+                    values[int(r*(r-1)/2+p)] = (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 
+                elseif r<=n && p == r # ∂^2 f / ∂x_r^2
+                    values[int(r*(r-1)/2+p)] = (imag(temp4)*sinh(x[p])*spg)/temp2^2 + sinh(x[r])*spg*(temp2*imag(temp7)+2*temp1*sinh(x[p])*spg)/temp2^3 - (imag(temp6)/temp2 + cosh(x[r])*spg*(temp1/temp2^2))          
+                elseif r>n && p<n # ∂^2 f / ∂u_r ∂ x_p = ∂^2 f / ∂x_{n+r} ∂ x_p
+                    values[int(r*(r-1)/2+p)] = (-temp2*imag((r-1)*xpg[p]^(r-2)) + sinh(x[p])*spg*imag(temp5))/temp2^2
+                else # ∂^2 f / ∂u_r ∂ u_p = ∂^2 f / ∂x_{n+r} ∂ x_{n+p} 
+                    values[int(r*(r-1)/2+p)] = 0.0
                 end
             end # for p       
         end # for r
@@ -163,19 +159,19 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                     temp6+=x[n+j]*(j-1)*(j-2)*xpg[r]^(j-3)
                     end # for j
                     
-                        if r<=n
+                    if r<=n
                         # ∂^2 g_{k} / ∂x_r ∂x_p  && ∂^2 g_{n+k} / ∂x_r ∂x_p
                         constraints[int(r*(r-1)/2+p)] += lambda[k]*(values[int(r*(r-1)/2+p)]*sinh(x[k])*cpg + (k==p?  grad_f[r]*cosh(x[p])*cpg : 0.0) + (k==r?  grad_f[p]*cosh(x[r])*cpg : 0.0) + (k==r==p?  f*sinh(x[p])*cpg+real(temp6) : 0.0) ) 
                         constraints[int(r*(r-1)/2+p)] += lambda[n+k]*( values[int(r*(r-1)/2+p)]*cosh(x[n+k])*spg + ((k+n)==p?  grad_f[r]*sinh(x[p])*spg : 0.0) + ((k+n)==r?  grad_f[p]*sinh(x[r])*spg : 0.0) + ((k+n)==r==p?  f*cosh(x[p])*spg+imag(temp6) : 0.0) ) 
-                        elseif r>n && p<n
+                    elseif r>n && p<n
                         # ∂^2 g_{k} / ∂u_r ∂ x_p = ∂^2 g_{k} / ∂x_{n+r} ∂ x_p   &&  ∂^2 g_{n+k} / ∂x_{n+r} ∂x_p
                         constraints[int(r*(r-1)/2+p)] += lambda[k]*(values[int((n+r)*(n+r-1)/2+p)]*sinh(x[k])*cpg + (k==p?  grad_f[r]*cosh(x[p])*cpg + real((r-1)*xpg[p]^(r-2)) : 0.0) ) 
                         constraints[int(r*(r-1)/2+p)] += lambda[n+k]*( values[int((n+r)*(n+r-1)/2+p)]*cosh(x[(k+n)])*spg + ((k+n)==p?  grad_f[r]*sinh(x[p])*spg + imag((r-1)*complex(x[p],pi/2gaopt)^(r-2)) : 0.0) ) 
-                        else
+                    else
                         # ∂^2 g_{k} / ∂u_r ∂ u_p = ∂^2 g_{k} / ∂x_{n+r} ∂ x_{n+p}  &&    ∂^2 g_{n+k} / ∂x_{n+r} ∂ x_{n+p} 
                         constraints[int(r*(r-1)/2+p)] += lambda[k]*0.0
                         constraints[int(r*(r-1)/2+p)] += lambda[n+k]*0.0
-                        end   # if loop
+                    end   # if loop
                 end # for p
             end # for r
         end # for k
