@@ -125,15 +125,15 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         # case 3) (r>n , p<=n)
         
         # case 1) ∂^2 f / ∂x_r ∂x_p (r<=n, p<r)
-        for r=2:n
+        @inbounds for r=2:n
             temp7=0.0 
-            for p=1:(r-1)
+            @inbounds for p=1:(r-1)
                 temp1=0.0
                 temp2=0.0
                 temp4=0.0
-                for k=1:n
+                @inbounds for k=1:n
                     temp3=0.0
-                    for j=1:n
+                    @inbounds for j=1:n
                         temp3+=x[n+j]*xpg[k]^(j-1)
                     end # for j
                     temp1+=ept[k]-imag(temp3)
@@ -146,14 +146,14 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         end
 
         # case 2) ∂^2 f / ∂x_r^2 (r<=n , p=r)
-        for r=1:n
+        @inbounds for r=1:n
             temp1=0.0
             temp2=0.0
             temp4=0.0
             temp6=0.0
-            for k=1:n
+            @inbounds for k=1:n
                 temp3=0.0
-                for j=1:n
+                @inbounds for j=1:n
                     temp3+=x[n+j]*xpg[k]^(j-1)
                 end # for j
                 temp1+=ept[k]-imag(temp3)
@@ -165,11 +165,11 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         end
         
         # case 3) ∂^2 f / ∂u_r ∂ x_p = ∂^2 f / ∂x_{n+r} ∂ x_p (r>n , p<=n)
-        for r=(n+1):2n
-            for p=1:n
+        @inbounds for r=(n+1):2n
+            @inbounds for p=1:n
                 temp2 = 0.0
                 temp5 = 0.0
-                for k=1:n
+                @inbounds for k=1:n
                     temp2+=cosh(x[k])*spg
                     temp5+=xpg[k]^(r-1)
                 end # for k
@@ -190,9 +190,9 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         # In this way, we don't have to create a special case for k = 2n.
 
 # case 1)  ∂^2 g_{k} / ∂x_r ∂x_p (r<=n, p<r)     
-for k = 1:n
-    for r = 2:n
-        for p = 1:(r-1)
+@inbounds for k = 1:n
+    @inbounds for r = 2:n
+        @inbounds for p = 1:(r-1)
             constraints[int(r*(r-1)/2+p)] += lambda[k]*values[int(r*(r-1)/2+p)]*sinhxc[k]
             constraints[int(r*(r-1)/2+p)] += lambda[n+k]*values[int(r*(r-1)/2+p)]*coshxs[n+k]
             if k == p
@@ -206,13 +206,13 @@ for k = 1:n
     end
 end
 # case 2)  ∂^2 g_{k} / ∂x_r^2  (r<=n, p=r)  
-for k=1:n
-    for r=1:n #(r=p)
+@inbounds for k=1:n
+    @inbounds for r=1:n #(r=p)
         constraints[int(r*(r-1)/2+r)] += lambda[k]*values[int(r*(r-1)/2+r)]*sinhxc[k]
         constraints[int(r*(r-1)/2+r)] += lambda[n+k]*values[int(r*(r-1)/2+r)]*coshxs[n+k]
         if k == r
             temp6 = 0.0
-            for j=1:n
+            @inbounds for j=1:n
                 temp6+=x[n+j]*(j-1)*(j-2)*xpg[r]^(j-3)
             end # for j
             constraints[int(r*(r-1)/2+r)] += lambda[k]*(2*grad_f[r]*coshxc[r]+f*sinhxc[r]+real(temp6))
@@ -221,9 +221,9 @@ for k=1:n
     end
 end
 # case 3)  ∂^2 g_{k} / ∂x_{n+r} ∂x_n (r>n, p<=n)  
-for k=1:n
-    for r=(n+1):2n
-        for p=1:n
+@inbounds for k=1:n
+    @inbounds for r=(n+1):2n
+        @inbounds for p=1:n
             constraints[int(r*(r-1)/2+p)] += lambda[k]*values[int(r*(r-1)/2+p)]*sinhxc[k] 
             constraints[int(r*(r-1)/2+p)] += lambda[n+k]*values[int(r*(r-1)/2+p)]*coshxs[k]             
             if k==p
