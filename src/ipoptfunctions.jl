@@ -194,7 +194,7 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
     @inbounds for r = 2:n
         @inbounds for p = 1:(r-1)
             constraints[int(r*(r-1)/2+p)] += lambda[k]*values[int(r*(r-1)/2+p)]*sinhxc[k]
-            constraints[int(r*(r-1)/2+p)] += lambda[n+k]*values[int(r*(r-1)/2+p)]*coshxs[n+k]
+            constraints[int(r*(r-1)/2+p)] += lambda[n+k]*values[int(r*(r-1)/2+p)]*coshxs[k]
             if k == p
                 constraints[int(r*(r-1)/2+p)] += lambda[k]*grad_f[r]*coshxc[p]
                 constraints[int(r*(r-1)/2+p)] += lambda[n+k]*grad_f[r]*sinhxs[p]
@@ -209,7 +209,7 @@ end
 @inbounds for k=1:n
     @inbounds for r=1:n #(r=p)
         constraints[int(r*(r-1)/2+r)] += lambda[k]*values[int(r*(r-1)/2+r)]*sinhxc[k]
-        constraints[int(r*(r-1)/2+r)] += lambda[n+k]*values[int(r*(r-1)/2+r)]*coshxs[n+k]
+        constraints[int(r*(r-1)/2+r)] += lambda[n+k]*values[int(r*(r-1)/2+r)]*coshxs[k]
         if k == r
             temp6 = 0.0
             @inbounds for j=1:n
