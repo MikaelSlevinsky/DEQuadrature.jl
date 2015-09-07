@@ -149,7 +149,7 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
             end # for p       
         end # for r
 
-        for k =1:n
+        for k =1:n-1
             for r=1:2n
                 for p=1:r
 
@@ -175,6 +175,32 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                 end # for p
             end # for r
         end # for k
+# case k = n
+        for r=1:2n
+                for p=1:r
+
+                    #a loop for temp6
+                    temp6 = 0.0
+                    for j=1:n
+                    temp6+=x[n+j]*(j-1)*(j-2)*xpg[r]^(j-3)
+                    end # for j
+                    
+                    if r<=n  
+                        # ∂^2 g_{k} / ∂x_r ∂x_p  && ∂^2 g_{n+k} / ∂x_r ∂x_p
+                        constraints[int(r*(r-1)/2+p)] += lambda[n]*(values[int(r*(r-1)/2+p)]*sinh(x[n])*cpg + (n==p?  grad_f[r]*cosh(x[p])*cpg : 0.0) + (n==r?  grad_f[p]*cosh(x[r])*cpg : 0.0) + (n==r==p?  f*sinh(x[p])*cpg+real(temp6) : 0.0) ) 
+                        constraints[int(r*(r-1)/2+p)] += lambda[2n]*(0.0)
+                    elseif r>n && p<n 
+                        # ∂^2 g_{k} / ∂u_r ∂ x_p = ∂^2 g_{k} / ∂x_{n+r} ∂ x_p   &&  ∂^2 g_{n+k} / ∂x_{n+r} ∂x_p
+                        constraints[int(r*(r-1)/2+p)] += lambda[n]*(values[int((n+r)*(n+r-1)/2+p)]*sinh(x[n])*cpg + (n==p?  grad_f[r]*cosh(x[p])*cpg + real((r-1)*xpg[p]^(r-2)) : 0.0) ) 
+                        constraints[int(r*(r-1)/2+p)] += lambda[2n]*(0.0)
+                    else
+                        # ∂^2 g_{k} / ∂u_r ∂ u_p = ∂^2 g_{k} / ∂x_{n+r} ∂ x_{n+p}  &&    ∂^2 g_{n+k} / ∂x_{n+r} ∂ x_{n+p} 
+                        constraints[int(r*(r-1)/2+p)] += lambda[n]*0.0
+                        constraints[int(r*(r-1)/2+p)] += lambda[2n]*(0.0)
+                    end   # if loop
+                end # for p
+            end # for r
+            
         values[:] = obj_factor*values[:] + constraints[:]
     end # if loop
 end # function
