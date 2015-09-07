@@ -153,14 +153,12 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         for k =1:n-1
             for r=1:2n
                 for p=1:r
-
-                    #a loop for temp6
-                    temp6 = 0.0
-                    for j=1:n
-                    temp6+=x[n+j]*(j-1)*(j-2)*xpg[r]^(j-3)
-                    end # for j
-                    
-                    if r<=n  
+                    if r<=n
+                        #a loop for temp6
+                        temp6 = 0.0
+                        for j=1:n
+                            temp6+=x[n+j]*(j-1)*(j-2)*xpg[r]^(j-3)
+                        end # for j
                         # ∂^2 g_{k} / ∂x_r ∂x_p  && ∂^2 g_{n+k} / ∂x_r ∂x_p
                         constraints[int(r*(r-1)/2+p)] += lambda[k]*(values[int(r*(r-1)/2+p)]*sinh(x[k])*cpg + (k==p?  grad_f[r]*cosh(x[p])*cpg : 0.0) + (k==r?  grad_f[p]*cosh(x[r])*cpg : 0.0) + (k==r==p?  f*sinh(x[p])*cpg+real(temp6) : 0.0) ) 
                         constraints[int(r*(r-1)/2+p)] += lambda[n+k]*( values[int(r*(r-1)/2+p)]*cosh(x[n+k])*spg + ((k+n)==p?  grad_f[r]*sinh(x[p])*spg : 0.0) + ((k+n)==r?  grad_f[p]*sinh(x[r])*spg : 0.0) + ((k+n)==r==p?  f*cosh(x[p])*spg+imag(temp6) : 0.0) ) 
@@ -179,14 +177,12 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
 # case k = n
         for r=1:2n
                 for p=1:r
-
-                    #a loop for temp6
-                    temp6 = 0.0
-                    for j=1:n
-                    temp6+=x[n+j]*(j-1)*(j-2)*xpg[r]^(j-3)
-                    end # for j
-                    
-                    if r<=n  
+                    if r<=n
+                        #a loop for temp6
+                        temp6 = 0.0
+                        for j=1:n
+                            temp6+=x[n+j]*(j-1)*(j-2)*xpg[r]^(j-3)
+                        end # for j
                         # ∂^2 g_{k} / ∂x_r ∂x_p  && ∂^2 g_{n+k} / ∂x_r ∂x_p
                         constraints[int(r*(r-1)/2+p)] += lambda[n]*(values[int(r*(r-1)/2+p)]*sinh(x[n])*cpg + (n==p?  grad_f[r]*cosh(x[p])*cpg : 0.0) + (n==r?  grad_f[p]*cosh(x[r])*cpg : 0.0) + (n==r==p?  f*sinh(x[p])*cpg+real(temp6) : 0.0) ) 
                         constraints[int(r*(r-1)/2+p)] += lambda[2n]*(0.0)
