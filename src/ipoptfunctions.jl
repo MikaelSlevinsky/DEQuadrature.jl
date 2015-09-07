@@ -125,7 +125,7 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         # case 3) (r>n , p<=n)
         
         # case 1) ∂^2 f / ∂x_r ∂x_p (r<=n, p<r)
-        for r=1:n
+        for r=2:n
             temp7=0.0 
             for p=1:(r-1)
                 temp1=0.0
