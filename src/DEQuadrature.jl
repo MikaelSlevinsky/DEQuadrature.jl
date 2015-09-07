@@ -125,8 +125,8 @@ function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),domain::Domai
     g_U[end] = 20.0#/gaopt#20.0
     g_L = -g_U
 
-    prob = createProblem(2n, x_L, x_U, 2n, g_L, g_U, 4n^2, n*(2n+1), eval_f, eval_g, eval_grad_f, eval_jac_g, eval_h)
-    addOption(prob, "print_level", 0);addOption(prob, "obj_scaling_factor", obj_scaling_factor)#;addOption(prob, "hessian_approximation", "limited-memory")
+    prob = createProblem(2n, x_L, x_U, 2n, g_L, g_U, 4n^2, n*(2n+1), eval_f, eval_g, eval_grad_f, eval_jac_g)#, eval_h)
+    addOption(prob, "print_level", 0);addOption(prob, "obj_scaling_factor", obj_scaling_factor);addOption(prob, "hessian_approximation", "limited-memory")
     prob.x = [real(asinh(complex(sign(dat-datbar),ept)/eptbar)),datbar,zeros(Float64,n-1)]
     for j=0:Hint
         global dat = (1-j/Hint).*dattest.+j/Hint.*datexact

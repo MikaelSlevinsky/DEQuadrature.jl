@@ -4,7 +4,7 @@
 function eval_f(x)
     temp1 = 0.0
     temp2 = 0.0
-    xpg = complex(x,pi/2gaopt)
+    xpg = complex(x[1:n],pi/2gaopt)
     @inbounds for k=1:n
         temp3=0.0
         @inbounds for j=1:n
@@ -21,7 +21,7 @@ function eval_g(x, g)
     # OK:  g[:] = zeros(2)  # Modifies 'in place'
     g[:] = zeros(2n)
     f = eval_f(x)
-    xpg = complex(x,pi/2gaopt)
+    xpg = complex(x[1:n],pi/2gaopt)
     @inbounds for k=1:n
         temp1=0.0
         @inbounds for j=1:n
@@ -37,7 +37,8 @@ function eval_grad_f(x, grad_f)
     # Bad: grad_f    = zeros(4)  # Allocates new array
     # OK:  grad_f[:] = zeros(4)  # Modifies 'in place'
     grad_f[:] = zeros(2n)
-    xpg = complex(x,pi/2gaopt)
+    xpg = complex(x[1:n],pi/2gaopt)
+    sinhx,coshx = sinh(x[1:n]),cosh(x[1:n])
     @inbounds for r=1:n
         temp1=0.0
         temp2=0.0
@@ -49,11 +50,11 @@ function eval_grad_f(x, grad_f)
                 temp3+=x[n+j]*xpg[k]^(j-1)
             end
             temp1+=ept[k]-imag(temp3)
-            temp2+=cosh(x[k])*spg
+            temp2+=coshx[k]*spg
             temp4+=x[n+k]*(k-1)*xpg[r]^(k-2)
             temp5+=xpg[k]^(r-1)
         end
-        grad_f[r] = -(temp2*imag(temp4) + sinh(x[r])*spg*temp1)/temp2^2
+        grad_f[r] = -(temp2*imag(temp4) + sinhx[r]*spg*temp1)/temp2^2
         grad_f[n+r] = -imag(temp5)/temp2
     end
 end
@@ -71,15 +72,16 @@ function eval_jac_g(x, mode, rows, cols, values)
         values[:]=zeros(4n^2)
         f = eval_f(x)
         eval_grad_f(x,grad_f)
-        xpg = complex(x,pi/2gaopt)
+        xpg = complex(x[1:n],pi/2gaopt)
+        sinhx,coshx = sinh(x[1:n]),cosh(x[1:n])
         @inbounds for k=1:n
             temp1=0.0
             @inbounds for r=1:n
-                values[2n*(k-1)+r]=grad_f[r]*sinh(x[k])*cpg
-                values[2n*(k-1)+n+r]=grad_f[n+r]*sinh(x[k])*cpg
+                values[2n*(k-1)+r]=grad_f[r]*sinhx[k]*cpg
+                values[2n*(k-1)+n+r]=grad_f[n+r]*sinhx[k]*cpg
 
-                values[2n^2+2n*(k-1)+r]=grad_f[r]*cosh(x[k])*spg
-                values[2n^2+2n*(k-1)+n+r]=grad_f[n+r]*cosh(x[k])*spg
+                values[2n^2+2n*(k-1)+r]=grad_f[r]*coshx[k]*spg
+                values[2n^2+2n*(k-1)+n+r]=grad_f[n+r]*coshx[k]*spg
 
                 values[2n*(k-1)+n+r] += real(xpg[k]^(r-1))
                 values[2n^2+2n*(k-1)+n+r] += imag(xpg[k]^(r-1))
@@ -87,8 +89,8 @@ function eval_jac_g(x, mode, rows, cols, values)
                 temp1+=x[n+r]*(r-1)*xpg[k]^(r-2)
             end
 
-            values[2n*(k-1)+k] += f*cosh(x[k])*cpg + real(temp1)
-            values[2n^2+2n*(k-1)+k] += f*sinh(x[k])*spg + imag(temp1)
+            values[2n*(k-1)+k] += f*coshx[k]*cpg + real(temp1)
+            values[2n^2+2n*(k-1)+k] += f*sinhx[k]*spg + imag(temp1)
         end
         @inbounds for k =1:n
             values[4n^2-k+1] = 0.0
@@ -113,16 +115,16 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         grad_f = zeros(2n)
         f = eval_f(x)
         eval_grad_f(x,grad_f)
-        xpg = complex(x,pi/2gaopt)
+        xpg = complex(x[1:n],pi/2gaopt)
         for r=1:n
             temp7=0.0 # depends on p, right? (I'm not sure.)
 
             for p=1:r
-            temp1=0.0
-            temp2=0.0
-            temp4=0.0
-            temp5=0.0
-            temp6=0.0
+                temp1=0.0
+                temp2=0.0
+                temp4=0.0
+                temp5=0.0
+                temp6=0.0
                 for k=1:n
                     temp3=0.0
                     for j=1:n
