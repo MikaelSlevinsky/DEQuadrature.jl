@@ -186,7 +186,7 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         
         # Moreover, since ∂^2 g_{2n} / ∂x_r ∂x_p = ∂^2 g_{2n} / ∂x_r^2 = ∂^2 g_{2n} / ∂x_{n+r} ∂x_p == 0.0
         # We can simplify our lives by setting:
-        lambda[2n] = 0.0. 
+        lambda[2n] = 0.0
         # In this way, we don't have to create a special case for k = 2n.
 
 # case 1)  ∂^2 g_{k} / ∂x_r ∂x_p (r<=n, p<r)     
