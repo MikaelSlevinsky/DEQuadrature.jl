@@ -149,7 +149,7 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                 end
             end # for p       
         end # for r
-
+# THE CONSTRAINTS
         for k =1:n-1
             for r=1:2n
                 for p=1:r
