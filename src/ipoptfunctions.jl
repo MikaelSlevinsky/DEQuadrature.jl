@@ -137,7 +137,7 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                         temp3+=x[n+j]*xpg[k]^(j-1)
                     end # for j
                     temp1+=ept[k]-imag(temp3)
-                    temp2+=cosh(x[k])*spg
+                    temp2+=coshxs[k]
                     temp4+=x[n+k]*(k-1)*xpg[r]^(k-2)
                     temp7+=x[n+k]*(k-1)*xpg[p]^(k-2)                    
                 end # for k
@@ -157,7 +157,7 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                     temp3+=x[n+j]*xpg[k]^(j-1)
                 end # for j
                 temp1+=ept[k]-imag(temp3)
-                temp2+=cosh(x[k])*spg
+                temp2+=coshxs[k]
                 temp4+=x[n+k]*(k-1)*xpg[r]^(k-2)
                 temp6+=x[n+k]*(k-1)*(k-2)*xpg[r]^(k-3)
             end # for k
@@ -170,7 +170,7 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                 temp2 = 0.0
                 temp5 = 0.0
                 @inbounds for k=1:n
-                    temp2+=cosh(x[k])*spg
+                    temp2+=coshxs[k]
                     temp5+=xpg[k]^(r-1)
                 end # for k
             values[int(r*(r-1)/2+p)] = (-temp2*imag((r-1)*xpg[p]^(r-2)) + sinhxs[p]*imag(temp5))/temp2^2
