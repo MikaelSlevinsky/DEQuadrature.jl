@@ -161,7 +161,7 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
                 temp4+=x[n+k]*(k-1)*xpg[r]^(k-2)
                 temp6+=x[n+k]*(k-1)*(k-2)*xpg[r]^(k-3)
             end # for k
-        values[int(r*(r-1)/2+r)] = (imag(temp4)*sinhxs[r])/temp2^2 + sinhxs[r]*(temp2*imag(temp4)+2*temp1*sinhxs[r])/temp2^3 - (imag(temp6)/temp2 + coshxs[r]*(temp1/temp2^2))          
+        values[int(r*(r-1)/2+r)] = 2*(temp1*sinhxs[r]^2 /temp2^3 + imag(temp4)*sinhxs[r]/temp2^2)-(imag(temp6)/temp2 + coshxs[r]*(temp1/temp2^2))          
         end
         
         # case 3) ∂^2 f / ∂u_r ∂ x_p = ∂^2 f / ∂x_{n+r} ∂ x_p (r>n , p<=n)
