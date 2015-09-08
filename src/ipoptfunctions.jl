@@ -212,7 +212,7 @@ end
         constraints[int(r*(r-1)/2+r)] += lambda[n+k]*values[int(r*(r-1)/2+r)]*coshxs[k]
         if k == r
             temp6 = 0.0
-            @inbounds for j=1:n
+            @inbounds for j=3:n
                 temp6+=x[n+j]*(j-1)*(j-2)*xpg[r]^(j-3)
             end # for j
             constraints[int(r*(r-1)/2+r)] += lambda[k]*(2*grad_f[r]*coshxc[r]+f*sinhxc[r]+real(temp6))
