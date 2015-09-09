@@ -159,11 +159,11 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
 
         # case 3) ∂^2 f / ∂u_r ∂ x_p = ∂^2 f / ∂x_{n+r} ∂ x_p (r>n , p<=n)
         @inbounds for r=(n+1):2n
-            @inbounds for p=1:n
-                temp5 = 0.0
+            temp5 = 0.0
                 @inbounds for k=1:n
                      temp5+=xpg[k]^(r-1)
                 end # for k
+            @inbounds for p=1:n
             values[int(r*(r-1)/2+p)] = (-temp2*imag((r-1)*xpg[p]^(r-2)) + sinhxs[p]*imag(temp5))/temp2^2
             end
         end
