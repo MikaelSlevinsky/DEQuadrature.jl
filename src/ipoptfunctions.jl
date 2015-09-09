@@ -158,13 +158,13 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         end
 
         # case 3) ∂^2 f / ∂u_r ∂ x_p = ∂^2 f / ∂x_{n+r} ∂ x_p (r>n , p<=n)
-        @inbounds for r=(n+1):2n
+        @inbounds for r = 1:n
             temp5 = 0.0
                 @inbounds for k=1:n
                      temp5+=xpg[k]^(r-1)
                 end # for k
             @inbounds for p=1:n
-            values[int(r*(r-1)/2+p)] = (-temp2*imag((r-1)*xpg[p]^(r-2)) + sinhxs[p]*imag(temp5))/temp2^2
+            values[int((n+r)*(n+r-1)/2+p)] = (-temp2*imag((r-1)*xpg[p]^(r-2)) + sinhxs[p]*imag(temp5))/temp2^2
             end
         end
         # case 4) ∂^2 f / ∂u_r ∂ u_p = ∂^2 f / ∂x_{n+r} ∂ x_{n+p} == 0 (r>n,p>n)
@@ -213,13 +213,13 @@ end
 end
 # case 3)  ∂^2 g_{k} / ∂x_{n+r} ∂x_n (r>n, p<=n)
 @inbounds for k=1:n
-    @inbounds for r=(n+1):2n
+    @inbounds for r=1:n
         @inbounds for p=1:n
-            constraints[int(r*(r-1)/2+p)] += lambda[k]*values[int(r*(r-1)/2+p)]*sinhxc[k]
-            constraints[int(r*(r-1)/2+p)] += lambda[n+k]*values[int(r*(r-1)/2+p)]*coshxs[k]
+            constraints[int((n+r)*(n+r-1)/2+p)] += lambda[k]*values[int((n+r)*(n+r-1)/2+p)]*sinhxc[k]
+            constraints[int((n+r)*(n+r-1)/2+p)] += lambda[n+k]*values[int((n+r)*(n+r-1)/2+p)]*coshxs[k]
             if k==p
-                constraints[int(r*(r-1)/2+p)] += lambda[k]*(grad_f[r]*coshxc[p] + real((r-1)*xpg[p]^(r-2)))
-                constraints[int(r*(r-1)/2+p)] += lambda[n+k]*(grad_f[r]*sinhxs[p] + imag((r-1)*xpg[p]^(r-2)))
+                constraints[int((n+r)*(n+r-1)/2+p)] += lambda[k]*(grad_f[n+r]*coshxc[p] + real((r-1)*xpg[p]^(r-2)))
+                constraints[int((n+r)*(n+r-1)/2+p)] += lambda[n+k]*(grad_f[n+r]*sinhxs[p] + imag((r-1)*xpg[p]^(r-2)))
             end
         end
     end
@@ -228,7 +228,6 @@ end
         values[:] = obj_factor*values[:] + constraints[:]
     end # if loop
 end # function
-
 #= Fun example
 using SincFun, DEQuadrature
 z = [complex((-2.0),1.0),complex(-1.0,.5),complex(1.0,0.25),complex(2.0,1.0)]
