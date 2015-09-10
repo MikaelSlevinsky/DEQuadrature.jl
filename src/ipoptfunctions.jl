@@ -30,7 +30,7 @@ function eval_g(x, g)
         g[k] = f*sinh(x[k])*cpg + real(temp1)-dat[k]
         g[n+k] =  f*cosh(x[k])*spg + imag(temp1)-ept[k]
     end
-    @inbounds g[2n] = x[1] + x[n]
+    @inbounds g[2n] = n == 1 ? 0 : x[1] + x[n]
 end
 
 function eval_grad_f(x, grad_f)
@@ -96,8 +96,8 @@ function eval_jac_g(x, mode, rows, cols, values)
             values[4n^2-k+1] = 0.0
             values[4n^2-n-k+1] = 0.0
         end
-        @inbounds values[4n^2-2n+1] = 1.0
-        @inbounds values[4n^2-n] = 1.0
+        @inbounds values[4n^2-2n+1] = n==1 ? 0.0 : 1.0
+        @inbounds values[4n^2-n] = n==1 ? 0.0 : 1.0
     end
 end
 
@@ -228,10 +228,17 @@ end
         values[:] = obj_factor*values[:] + constraints[:]
     end # if loop
 end # function
-#= Fun example
+
+#=
+The following examples can be used to test the functions present in ipoptfunctions.jl.
+Using Maple, I found the analytical expressions for all the functions presents in this file in the case of
+n=1 (one complex singularity) and n=2 (two complex singularities). As can be seen from these examples, 
+all the functions coded agree with the analytical results. 
+
+# Example 1: one singluarity (n=1)
 using SincFun, DEQuadrature
-z = [complex((-2.0),1.0),complex(-1.0,.5),complex(1.0,0.25),complex(2.0,1.0)]
-ga =1.0
+z = [complex(-2.0,1.0)]
+ga = 1.2
 ψinvz = ψinv(Finite(-1.0,1.0,-0.5,0.0,0.0,1.0),z)
     global n = length(z)
     global dat = convert(Vector{Float64},real(ψinvz))
@@ -239,7 +246,85 @@ ga =1.0
     global gaopt = convert(Float64,ga)
     global spg = sinpi(1/2gaopt)
     global cpg = cospi(1/2gaopt)
+#Analytical results
 
-srand(1234); x = rand(2*n)
-eval_h(x,2.0,zeros(2n),zeros(2n),2.0,rand(2n),zeros(n*(2n+1)))
+f1(x) = ept[1]/(cosh(x[1])*spg)
+grad_f1(x) = [-ept[1]*sinh(x[1])/(cosh(x[1])^2 *spg),0]
+Hessian_f1(x) = [(cosh(x[1])^2-2)*ept[1]/(cosh(x[1])^3 *spg),0,0]
+gc(x) = [ept[1]*tanh(x[1])*cpg/spg+x[2]-dat[1],0]
+jac_gc(x) = [(ept[1]/(cosh(x[1])^2))*(cpg/spg),1,0,0]
+Hessian_g1(x) = [(-2*ept[1]*sinh(x[1])/(cosh(x[1])^3))*(cpg/spg),0,0]
+Hessian_g2(x) = [0,0,0]
+
+# Are they equal?
+x=rand(2)
+# function f
+norm(f1(x)-eval_f(x))
+# grad f
+grad_f = zeros(2n)
+eval_grad_f(x,grad_f)
+norm(grad_f1(x)-grad_f)
+# Hessian of f
+norm(Hessian_f1(x)-eval_h(x,1.0,zeros(2n),zeros(2n),1.0,zeros(2n),zeros(n*(2n+1))))
+# constraints g
+g=zeros(2)
+eval_g(x, g)
+norm(gc(x)-g)
+# gradient of constraints
+values =  zeros(4n^2)
+eval_jac_g(x, 1.0, zeros(2n), zeros(2n),values)
+norm(values- jac_gc(x))
+# Hessian of constraints
+norm(Hessian_g1(x) - eval_h(x,1.0,zeros(2n),zeros(2n),0.0,[1,0],zeros(n*(2n+1))))
+norm(Hessian_g2(x) - eval_h(x,1.0,zeros(2n),zeros(2n),0.0,[0,1],zeros(n*(2n+1))))
+# end of example
+
+
+
+# Example 2: two singluarity (n=2)
+using SincFun, DEQuadrature
+z = [complex(-2.0,1.0), complex(1.0,5.0)]
+ga = 1.2
+ψinvz = ψinv(Finite(-1.0,1.0,-0.5,0.0,0.0,1.0),z)
+    global n = length(z)
+    global dat = convert(Vector{Float64},real(ψinvz))
+    global ept = convert(Vector{Float64},abs(imag(ψinvz)))
+    global gaopt = convert(Float64,ga)
+    global spg = sinpi(1/2gaopt)
+    global cpg = cospi(1/2gaopt)
+#Analytical results
+
+f2(x) = -(pi*x[4]-ga*ept[1]-ga*ept[2])/(ga*spg*(cosh(x[1])+cosh(x[2])))
+grad_f2(x) = [-(-pi*x[4]+ga*ept[1]+ga*ept[2])*sinh(x[1])/(ga*spg*(cosh(x[1])+cosh(x[2]))^2),-(-pi*x[4]+ga*ept[1]+ga*ept[2])*sinh(x[2])/(spg*ga*(cosh(x[1])+cosh(x[2]))^2),0,-pi/(ga*spg*(cosh(x[1])+cosh(x[2])))]
+Hessian_f2(x) = [(-pi*x[4]+ga*ept[1]+ga*ept[2])*(cosh(x[1])^2-2-cosh(x[2])*cosh(x[1]))/(ga*spg*(cosh(x[1])+cosh(x[2]))^3),(2*(-pi*x[4]+ga*ept[1]+ga*ept[2]))*sinh(x[1])*sinh(x[2])/(ga*spg*(cosh(x[1])+cosh(x[2]))^3),-(-pi*x[4]+ga*ept[1]+ga*ept[2])*(cosh(x[2])*cosh(x[1])-cosh(x[2])^2+2)/(ga*spg*(cosh(x[1])+cosh(x[2]))^3),0,0,0,pi*sinh(x[1])/(ga*spg*(cosh(x[1])+cosh(x[2]))^2),pi*sinh(x[2])/(ga*spg*(cosh(x[1])+cosh(x[2]))^2),0,0]
+gc2(x) = [(-pi*x[4]+ga*ept[1]+ga*ept[2])*sinh(x[1])*cpg/(ga*spg*(cosh(x[1])+cosh(x[2])))+x[3]+x[4]*x[1]-dat[1],(-pi*x[4]+ga*ept[1]+ga*ept[2])*sinh(x[2])*cpg/(ga*spg*(cosh(x[1])+cosh(x[2])))+x[3]+x[4]*x[2]-dat[2],(-pi*x[4]+ga*ept[1]+ga*ept[2])*cosh(x[1])/(ga*(cosh(x[1])+cosh(x[2])))+(1/2)*x[4]*pi/ga-ept[1],x[1]+x[2]]
+jac_gc2(x) = [(-pi*x[4]+ga*ept[1]+ga*ept[2])*cosh(x[1])*cpg/(ga*spg*(cosh(x[1])+cosh(x[2])))-(-pi*x[4]+ga*ept[1]+ga*ept[2])*sinh(x[1])^2*cpg/(ga*spg*(cosh(x[1])+cosh(x[2]))^2)+x[4],-(-pi*x[4]+ga*ept[1]+ga*ept[2])*sinh(x[1])*cpg*sinh(x[2])/(ga*spg*(cosh(x[1])+cosh(x[2]))^2),1.0,-pi*sinh(x[1])*cpg/(ga*spg*(cosh(x[1])+cosh(x[2])))+x[1],-(-pi*x[4]+ga*ept[1]+ga*ept[2])*sinh(x[1])*cpg*sinh(x[2])/(ga*spg*(cosh(x[1])+cosh(x[2]))^2),(-pi*x[4]+ga*ept[1]+ga*ept[2])*cosh(x[2])*cpg/(ga*spg*(cosh(x[1])+cosh(x[2])))-(-pi*x[4]+ga*ept[1]+ga*ept[2])*sinh(x[2])^2*cpg/(ga*spg*(cosh(x[1])+cosh(x[2]))^2)+x[4],1.0,-pi*sinh(x[2])*cpg/(ga*spg*(cosh(x[1])+cosh(x[2])))+x[2],(-pi*x[4]+ga*ept[1]+ga*ept[2])*sinh(x[1])/(ga*(cosh(x[1])+cosh(x[2])))-(-pi*x[4]+ga*ept[1]+ga*ept[2])*cosh(x[1])*sinh(x[1])/(ga*(cosh(x[1])+cosh(x[2]))^2),-(-pi*x[4]+ga*ept[1]+ga*ept[2])*cosh(x[1])*sinh(x[2])/(ga*(cosh(x[1])+cosh(x[2]))^2),0.0,-pi*cosh(x[1])/(ga*(cosh(x[1])+cosh(x[2])))+(1/2)*pi/ga,1.0,1.0,0.0,0.0]
+Hessian_g12(x) = [sinh(x[1])*(cosh(x[2])*cosh(x[1])-cosh(x[2])^2+2)*cpg*(pi*x[4]-ga*ept[1]-ga*ept[2])/(ga*spg*(cosh(x[1])+cosh(x[2]))^3),-sinh(x[2])*(cosh(x[1])^2-2-cosh(x[2])*cosh(x[1]))*(pi*x[4]-ga*ept[1]-ga*ept[2])*cpg/(ga*spg*(cosh(x[1])+cosh(x[2]))^3),sinh(x[1])*(cosh(x[2])*cosh(x[1])-cosh(x[2])^2+2)*cpg*(pi*x[4]-ga*ept[1]-ga*ept[2])/(ga*spg*(cosh(x[1])+cosh(x[2]))^3),0.0,0.0,0.0,-(pi*cosh(x[1])*cosh(x[2])*cpg-cosh(x[1])^2*ga*spg-2*cosh(x[1])*cosh(x[2])*ga*spg-cosh(x[2])^2*ga*spg+pi*cpg)/(ga*spg*(cosh(x[1])+cosh(x[2]))^2),pi*sinh(x[1])*cpg*sinh(x[2])/(ga*spg*(cosh(x[1])+cosh(x[2]))^2),0,0]
+Hessian_g22(x) = [sinh(x[2])*(cosh(x[2])*cosh(x[1])-cosh(x[1])^2+2)*(pi*x[4]-ga*ept[1]-ga*ept[2])*cpg/(ga*spg*(cosh(x[1])+cosh(x[2]))^3), -sinh(x[1])*(cosh(x[2])^2-2-cosh(x[2])*cosh(x[1]))*cpg*(pi*x[4]-ga*ept[1]-ga*ept[2])/(ga*spg*(cosh(x[1])+cosh(x[2]))^3), sinh(x[2])*(cosh(x[2])*cosh(x[1])-cosh(x[1])^2+2)*(pi*x[4]-ga*ept[1]-ga*ept[2])*cpg/(ga*spg*(cosh(x[1])+cosh(x[2]))^3), 0, 0, 0, pi*sinh(x[1])*cpg*sinh(x[2])/(ga*spg*(cosh(x[1])+cosh(x[2]))^2), -(pi*cosh(x[1])*cosh(x[2])*cpg-cosh(x[1])^2*ga*spg-2*cosh(x[1])*cosh(x[2])*ga*spg-cosh(x[2])^2*ga*spg+pi*cpg)/(ga*spg*(cosh(x[1])+cosh(x[2]))^2), 0, 0]
+Hessian_g23(x) = [-cosh(x[2])*(cosh(x[2])*cosh(x[1])-cosh(x[1])^2+2)*(pi*x[4]-ga*ept[1]-ga*ept[2])/(ga*(cosh(x[1])+cosh(x[2]))^3), (pi*x[4]-ga*ept[1]-ga*ept[2])*sinh(x[1])*sinh(x[2])*(-cosh(x[1])+cosh(x[2]))/(ga*(cosh(x[1])+cosh(x[2]))^3), -cosh(x[1])*(cosh(x[2])^2-2-cosh(x[2])*cosh(x[1]))*(pi*x[4]-ga*ept[1]-ga*ept[2])/(ga*(cosh(x[1])+cosh(x[2]))^3), 0, 0, 0, -pi*sinh(x[1])*cosh(x[2])/(ga*(cosh(x[1])+cosh(x[2]))^2), pi*cosh(x[1])*sinh(x[2])/(ga*(cosh(x[1])+cosh(x[2]))^2), 0, 0]
+Hessian_g24(x) = [0, 0, 0, 0, 0, 0, 0.0, 0, 0, 0]
+# Are they equal?
+x=rand(4)
+# function f
+norm(f2(x)-eval_f(x))
+# grad f
+grad_f = zeros(2n)
+eval_grad_f(x,grad_f)
+norm(grad_f2(x)-grad_f)
+# Hessian of f
+norm(Hessian_f2(x)-eval_h(x,1.0,zeros(2n),zeros(2n),1.0,zeros(2n),zeros(n*(2n+1))))
+# constraints g
+g=zeros(4)
+eval_g(x, g)
+norm(gc2(x)-g)
+# gradient of constraints
+values =  zeros(4n^2)
+eval_jac_g(x, 1.0, zeros(2n), zeros(2n),values)
+norm(values- jac_gc2(x))
+# Hessian of constraints
+norm(Hessian_g12(x) - eval_h(x,1.0,zeros(2n),zeros(2n),0.0,[1,0,0,0.0],zeros(n*(2n+1))))
+norm(Hessian_g22(x) - eval_h(x,1.0,zeros(2n),zeros(2n),0.0,[0,1,0.0,0.0],zeros(n*(2n+1))))
+norm(Hessian_g23(x) - eval_h(x,1.0,zeros(2n),zeros(2n),0.0,[0,0,1.0,0.0],zeros(n*(2n+1))))
+norm(Hessian_g24(x) - eval_h(x,1.0,zeros(2n),zeros(2n),0.0,[0,0,0.0,1.0],zeros(n*(2n+1))))
+# end of example
 =#
