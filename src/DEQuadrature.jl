@@ -118,7 +118,7 @@ function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),domain::Domai
     datexact,eptexact = dat,ept
     dattest,epttest = fill(datbar,n),ept
 
-    x_U = [fill(30.0,n),fill(10.0,n)]
+    x_U = [fill(30.0,n);fill(10.0,n)]
     x_L = -x_U
 
     g_U = zeros(Float64,2n)
@@ -127,7 +127,7 @@ function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),domain::Domai
 
     prob = createProblem(2n, x_L, x_U, 2n, g_L, g_U, 4n^2, n*(2n+1), eval_f, eval_g, eval_grad_f, eval_jac_g)#, eval_h)
     addOption(prob, "print_level", 0);addOption(prob, "obj_scaling_factor", obj_scaling_factor);addOption(prob, "hessian_approximation", "limited-memory")
-    prob.x = [real(asinh(complex(sign(dat-datbar),ept)/eptbar)),datbar,zeros(Float64,n-1)]
+    prob.x = [real(asinh(complex(sign(dat-datbar),ept)/eptbar));datbar;zeros(Float64,n-1)]
     for j=0:Hint
         global dat = (1-j/Hint).*dattest.+j/Hint.*datexact
         global ept = (1-j/Hint).*epttest.+j/Hint.*eptexact
@@ -147,13 +147,13 @@ end
 # at a vector of equally spaced points using recurrence relations for hyperbolic functions.
 #
 
-function hfast{S,T<:Number}(h::ConformalMap{S},t::Vector{T})
-    nu,ntm1d2 = length(h.u),int((length(t)-1)/2)
-    schrec(ntm1d2,zero(T),h.u0*sinh(t[ntm1d2+2]),2cosh(t[ntm1d2+2])) .+ t.^([0:nu-1]')*h.u
+function hfast{S,T<:Number}(h::ConformalMap{S},t::AbstractVector{T})
+    nu,ntm1d2 = length(h.u),round(Int,(length(t)-1)/2)
+    schrec(ntm1d2,zero(T),h.u0*sinh(t[ntm1d2+2]),2cosh(t[ntm1d2+2])) .+ t.^(collect(0:nu-1)')*h.u
 end
-function hpfast{S,T<:Number}(h::ConformalMap{S},t::Vector{T})
-    nu,ntm1d2 = length(h.u),int((length(t)-1)/2)
-    schrec(ntm1d2,h.u0,h.u0*cosh(t[ntm1d2+2]),2cosh(t[ntm1d2+2])) .+ t.^([0:nu-2]')*([1:nu-1].*h.u[2:nu])
+function hpfast{S,T<:Number}(h::ConformalMap{S},t::AbstractVector{T})
+    nu,ntm1d2 = length(h.u),round(Int,(length(t)-1)/2)
+    schrec(ntm1d2,h.u0,h.u0*cosh(t[ntm1d2+2]),2cosh(t[ntm1d2+2])) .+ t.^(collect(0:nu-2)')*(collect(1:nu-1).*h.u[2:nu])
 end
 
 function schrec{T<:Number}(nt::Int,v1::T,v2::T,v3::T)

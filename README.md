@@ -41,7 +41,7 @@ h = DEMapValues(z;domain=Finite(-1.0,1.0,-0.5,0.0,0.0,1.0))
 for i = 1:6
 	x,w = DENodesAndWeights(h,2^i;b2factor=0.5,domain=Finite(-1.0,1.0,-0.5,0.0,0.0,1.0))
 	val = dot(f(x),w)
-	err = abs(val-convert(Float64,BigFloat(DEQuadrature.example4p1)))
+	err = abs(val-parse(Float64,DEQuadrature.example4p1))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
 end
 ```
@@ -73,7 +73,7 @@ h = DEMapValues(z;domain=Infinite1(BigFloat))
 for i = 1:10
 	x,w = DENodesAndWeights(h,2^i;domain=Infinite1(BigFloat))
 	val = dot(f(x),w)
-	err = abs(val-BigFloat(DEQuadrature.example4p2))
+	err = abs(val-parse(BigFloat,DEQuadrature.example4p2))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
 end
 ```
@@ -99,15 +99,15 @@ x = zeros(BigFloat,5);
 for i = 1:4
 	x,w = DENodesAndWeights(Complex{BigFloat}[],2^i;domain=SemiInfinite2(BigFloat))
 	val = dot(f(x),w)
-	err = abs(val-BigFloat(DEQuadrature.example4p4))
+	err = abs(val-parse(BigFloat,DEQuadrature.example4p4))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
 end
 for i = 5:8
-	(p,q) = sincpade(f(x),x,(length(x)-1)/2,i-2,i+2)
+	(p,q) = sincpade(f(x),x,div(length(x)-1,2),i-2,i+2)
 	rootvec = polyroots(q)
 	x,w = DENodesAndWeights(convert(Vector{Complex{BigFloat}},rootvec[end-4:2:end]),2^i;domain=SemiInfinite2(BigFloat),Hint=25)
 	val = dot(f(x),w)
-	err = abs(val-BigFloat(DEQuadrature.example4p4))
+	err = abs(val-parse(BigFloat,DEQuadrature.example4p4))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
 end
 ```
