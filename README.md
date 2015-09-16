@@ -1,6 +1,6 @@
 # DEQuadrature.jl
 
-The aim of this `Julia` package are to be the fastest general purpose quadrature package in Julia.
+The aim of this `Julia` package is to be the fastest general purpose quadrature package in Julia.
 It supports the canonical interval, and semi-infinite and infinite domains in arithmetic up to
 and including `BigFloat` and provides support for maximizing convergence rates when complex
 singularities are present near the contour of integration. Since the package can handle integrable
@@ -17,6 +17,8 @@ conformal map `h(t)` in Eq. (3.14) of <a href="http://dx.doi.org/10.1137/1409783
 This module requires the use of the Julia package Ipopt for solving the nonlinear program.
 
 ```julia
+Pkg.clone("https://github.com/MikaelSlevinsky/SincFun.jl.git")
+Pkg.clone("https://github.com/MikaelSlevinsky/DEQuadrature.jl.git")
 using SincFun, DEQuadrature
 ```
 
