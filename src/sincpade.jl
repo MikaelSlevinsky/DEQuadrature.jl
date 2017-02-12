@@ -21,7 +21,7 @@ function polyroots(q)
 #This function computes the roots of the polynomial 1 + q[1] x + ... + q[s] x^s by the inverse eigenvalues of the companion matrix.
 	s = length(q)
 	M = diagm(ones(s-1),-1)
-	M[1,:] -= q'
+	M[1,:] .-= q
 	D = eigvals(M)
 	return 1.0./D
 end

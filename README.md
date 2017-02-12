@@ -27,7 +27,7 @@ using SincFun, DEQuadrature
 Suppose we are interested in calculating the integral of:
 
 ```julia
-f(x) = exp(1./abs2(x-z[1]))./abs2(x-z[2])
+f = x-> exp(1./abs2(x-z[1]))./abs2(x-z[2])
 ```
 
 on the interval `[-1,1]` with the singularities:
@@ -42,7 +42,7 @@ as well as a square root singularity at the left endpoint and a logarithmic sing
 h = DEMapValues(z;domain=Finite(-1.0,1.0,-0.5,0.0,0.0,1.0))
 for i = 1:6
 	x,w = DENodesAndWeights(h,2^i;b2factor=0.5,domain=Finite(-1.0,1.0,-0.5,0.0,0.0,1.0))
-	val = dot(f(x),w)
+	val = dot(f.(x),w)
 	err = abs(val-parse(Float64,DEQuadrature.example4p1))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
 end
@@ -53,7 +53,7 @@ end
 The package has equal support for `BigFloat`s, making high precision calculations a breeze! Suppose we are interested in calculating the integral of:
 
 ```julia
-f(x) = exp(10./abs2(x-z[1])).*cos(10./abs2(x-z[2]))./abs2(x-z[3])./abs(x-z[4])
+f = x-> exp(10./abs2(x-z[1])).*cos(10./abs2(x-z[2]))./abs2(x-z[3])./abs(x-z[4])
 ```
 
 on the real line with the singularities:
@@ -74,7 +74,7 @@ Then, we use the package function `DEMapValues` to calculate the optimized map a
 h = DEMapValues(z;domain=Infinite1(BigFloat))
 for i = 1:10
 	x,w = DENodesAndWeights(h,2^i;domain=Infinite1(BigFloat))
-	val = dot(f(x),w)
+	val = dot(f.(x),w)
 	err = abs(val-parse(BigFloat,DEQuadrature.example4p2))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
 end
@@ -85,7 +85,7 @@ end
 Suppose we are interested in calculating the integral of:
 
 ```julia
-f(x) = x./abs(x-z[1])./abs2(x-z[2])./abs2(x-z[3])
+f = x-> x./abs(x-z[1])./abs2(x-z[2])./abs2(x-z[3])
 ```
 
 on `[0,∞)` with the singularities:
@@ -100,15 +100,15 @@ We use the package functions `sincpade` and `polyroots` to compute the approxima
 x = zeros(BigFloat,5);
 for i = 1:4
 	x,w = DENodesAndWeights(Complex{BigFloat}[],2^i;domain=SemiInfinite2(BigFloat))
-	val = dot(f(x),w)
+	val = dot(f.(x),w)
 	err = abs(val-parse(BigFloat,DEQuadrature.example4p4))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
 end
 for i = 5:8
-	(p,q) = sincpade(f(x),x,div(length(x)-1,2),i-2,i+2)
+	(p,q) = sincpade(f.(x),x,div(length(x)-1,2),i-2,i+2)
 	rootvec = polyroots(q)
 	x,w = DENodesAndWeights(convert(Vector{Complex{BigFloat}},rootvec[end-4:2:end]),2^i;domain=SemiInfinite2(BigFloat),Hint=25)
-	val = dot(f(x),w)
+	val = dot(f.(x),w)
 	err = abs(val-parse(BigFloat,DEQuadrature.example4p4))
 	println(@sprintf("Order: %2i Value: %19.16e Relative error: %6.2e",i,val,err))
 end

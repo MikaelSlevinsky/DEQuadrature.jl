@@ -4,7 +4,7 @@
 function eval_f(x)
     temp1 = 0.0
     temp2 = 0.0
-    xpg = complex(x[1:n],pi/2gaopt)
+    xpg = complex.(x[1:n],pi/2gaopt)
     @inbounds for k=1:n
         temp3=0.0
         @inbounds for j=1:n
@@ -21,7 +21,7 @@ function eval_g(x, g)
     # OK:  g[:] = zeros(2)  # Modifies 'in place'
     g[:] = zeros(2n)
     f = eval_f(x)
-    xpg = complex(x[1:n],pi/2gaopt)
+    xpg = complex.(x[1:n],pi/2gaopt)
     @inbounds for k=1:n
         temp1=0.0
         @inbounds for j=1:n
@@ -37,8 +37,8 @@ function eval_grad_f(x, grad_f)
     # Bad: grad_f    = zeros(4)  # Allocates new array
     # OK:  grad_f[:] = zeros(4)  # Modifies 'in place'
     grad_f[:] = zeros(2n)
-    xpg = complex(x[1:n],pi/2gaopt)
-    sinhx,coshx = sinh(x[1:n]),cosh(x[1:n])
+    xpg = complex.(x[1:n],pi/2gaopt)
+    sinhx,coshx = sinh.(x[1:n]),cosh.(x[1:n])
     @inbounds for r=1:n
         temp1=0.0
         temp2=0.0
@@ -72,8 +72,8 @@ function eval_jac_g(x, mode, rows, cols, values)
         values[:]=zeros(4n^2)
         f = eval_f(x)
         eval_grad_f(x,grad_f)
-        xpg = complex(x[1:n],pi/2gaopt)
-        sinhx,coshx = sinh(x[1:n]),cosh(x[1:n])
+        xpg = complex.(x[1:n],pi/2gaopt)
+        sinhx,coshx = sinh.(x[1:n]),cosh.(x[1:n])
         @inbounds for k=1:n
             temp1=0.0
             @inbounds for r=1:n
@@ -115,13 +115,13 @@ function eval_h(x, mode, rows, cols, obj_factor, lambda, values)
         grad_f = zeros(2n)
         f = eval_f(x)
         eval_grad_f(x,grad_f)
-        xpg = complex(x[1:n],pi/2gaopt)
-        sinhxs,coshxs = sinh(x[1:n])*spg,cosh(x[1:n])*spg
-        sinhxc,coshxc = sinh(x[1:n])*cpg,cosh(x[1:n])*cpg
+        xpg = complex.(x[1:n],pi/2gaopt)
+        sinhxs,coshxs = sinh.(x[1:n])*spg,cosh.(x[1:n])*spg
+        sinhxc,coshxc = sinh.(x[1:n])*cpg,cosh.(x[1:n])*cpg
 
         # sums that do not depend on ror p can be computed beforehand.
         temp1 = sum(ept-imag(xpg.^((1:n)'-1))*x[(n+1):2n])
-        temp2 = sum(cosh(x[1:n]))*spg
+        temp2 = sum(cosh.(x[1:n]))*spg
 
 # THE OBJECTIVE VALUES
         # The objective values broken into three seperate cases:
@@ -232,8 +232,8 @@ end # function
 #=
 The following examples can be used to test the functions present in ipoptfunctions.jl.
 Using Maple, I found the analytical expressions for all the functions presents in this file in the case of
-n=1 (one complex singularity) and n=2 (two complex singularities). As can be seen from these examples, 
-all the functions coded agree with the analytical results. 
+n=1 (one complex singularity) and n=2 (two complex singularities). As can be seen from these examples,
+all the functions coded agree with the analytical results.
 
 # Example 1: one singluarity (n=1)
 using SincFun, DEQuadrature

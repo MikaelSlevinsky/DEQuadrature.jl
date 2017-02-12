@@ -61,7 +61,7 @@ function DENodesAndWeights{T<:Number}(h::ConformalMap{T},n::Int;b2factor::T=one(
     hsk=linspace(-hs*n,hs*n,2n+1);hhsk=hfast(h,hsk)
 
     x,w = ψ(domain,hhsk),hs*ψp(domain,hhsk).*singularities(domain,hhsk).*hpfast(h,hsk)
-    cutoff = !isinf(x).*!isnan(x).*!isinf(w).*!isnan(w)
+    cutoff = !isinf.(x).*!isnan.(x).*!isinf.(w).*!isnan.(w)
     return x[cutoff],w[cutoff]
 end
 
@@ -96,7 +96,7 @@ function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),domain::Domai
     ψinvz = ψinv(domain,z)
     global n = length(z)
     global dat = convert(Vector{Float64},real(ψinvz))
-    global ept = convert(Vector{Float64},abs(imag(ψinvz)))
+    global ept = convert(Vector{Float64},abs.(imag(ψinvz)))
     global gaopt = convert(Float64,ga)
     global spg = sinpi(1/2gaopt)
     global cpg = cospi(1/2gaopt)
@@ -127,7 +127,7 @@ function DEMapValues{T<:Number}(z::Vector{Complex{T}};ga::T=one(T),domain::Domai
 
     prob = createProblem(2n, x_L, x_U, 2n, g_L, g_U, 4n^2, n*(2n+1), eval_f, eval_g, eval_grad_f, eval_jac_g)#, eval_h)
     addOption(prob, "print_level", 0);addOption(prob, "obj_scaling_factor", obj_scaling_factor);addOption(prob, "hessian_approximation", "limited-memory")
-    prob.x = [real(asinh(complex(sign(dat-datbar),ept)/eptbar));datbar;zeros(Float64,n-1)]
+    prob.x = [real(asinh.(complex.(sign.(dat-datbar),ept)/eptbar));datbar;zeros(Float64,n-1)]
     for j=0:Hint
         global dat = (1-j/Hint).*dattest.+j/Hint.*datexact
         global ept = (1-j/Hint).*epttest.+j/Hint.*eptexact
@@ -157,7 +157,7 @@ function hpfast{S,T<:Number}(h::ConformalMap{S},t::AbstractVector{T})
 end
 
 function schrec{T<:Number}(nt::Int,v1::T,v2::T,v3::T)
-    rec = Array(T,2nt+1)
+    rec = Array{T}(2nt+1)
     rec[nt+1] = v1
     rec[nt+2] = v2
     rec[nt] = v3*v1-v2
