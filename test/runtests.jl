@@ -2,8 +2,8 @@ using SincFun, DEQuadrature, Base.Test
 
 println("Testing Example 4.1")
 
-f = x-> exp(1./abs2(x-z[1]))./abs2(x-z[2])
-z = [complex(-0.5,1.0),complex(0.5,0.5)]
+f = x-> exp(1/abs2(x-z[1]))/abs2(x-z[2])
+z = [complex(-0.5,1.0);complex(0.5,0.5)]
 
 h = DEMapValues(z;domain=Finite(-1.0,1.0,-0.5,0.0,0.0,1.0))
 @time h = DEMapValues(z;domain=Finite(-1.0,1.0,-0.5,0.0,0.0,1.0))
@@ -22,8 +22,8 @@ println("Testing Example 4.2")
 
 DEQuadrature.digits(100)
 
-f = x-> exp(10./abs2(x-z[1])).*cos(10./abs2(x-z[2]))./abs2(x-z[3])./abs(x-z[4])
-z = [complex(big(-2.0),1.0),complex(-1.0,.5),complex(1.0,0.25),complex(2.0,1.0)]
+f = x-> exp(10/abs2(x-z[1]))*cos(10/abs2(x-z[2]))/abs2(x-z[3])/abs(x-z[4])
+z = [complex(big(-2.0),1.0);complex(-1.0,.5);complex(1.0,0.25);complex(2.0,1.0)]
 
 @time h = DEMapValues(z;domain=Infinite1(BigFloat))
 @time for i = 1:10
@@ -39,8 +39,8 @@ end
 
 println("Testing Example 4.4")
 
-f = x-> x./abs(x-z[1])./abs2(x-z[2])./abs2(x-z[3])
-z = [complex(big(1.0),1.0),complex(2.,.5),complex(3,1//3)]
+f = x-> x/abs(x-z[1])/abs2(x-z[2])/abs2(x-z[3])
+z = [complex(big(1.0),1.0);complex(2.,.5);complex(3,1//3)]
 
 x = zeros(BigFloat,5);
 err = 0.0
@@ -62,7 +62,7 @@ end
 @test err <= -3log(eps(BigFloat))*eps(BigFloat)
 
 println("Testing γ > 1")
-z = [complex(-0.5,1.0),complex(0.0,0.5),complex(0.5,0.75)]
+z = [complex(-0.5,1.0);complex(0.0,0.5);complex(0.5,0.75)]
 ga=2.0
 h = DEMapValues(z;ga=ga)
 @test norm(z - tanh.(h[complex.(h.x,pi/2/ga)])) <= sqrt(eps())
@@ -73,7 +73,7 @@ DEQuadrature.digits(56)
 
 val = zeros(BigFloat,10)
 z = [complex(big(0.0),big(0.2))]
-f = x-> exp(-x.^8/2+cos(10x))./(1+25x.^2)
+f = x-> exp(-x^8/2+cos(10x))/(1+25x^2)
 
 @time h = DEMapValues(z;ga=big(8.0),domain=Infinite2(BigFloat))
 @time for i = 1:10

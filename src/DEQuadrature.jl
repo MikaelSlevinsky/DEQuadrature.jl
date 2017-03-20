@@ -61,7 +61,7 @@ function DENodesAndWeights{T<:Number}(h::ConformalMap{T},n::Int;b2factor::T=one(
     hsk=linspace(-hs*n,hs*n,2n+1);hhsk=hfast(h,hsk)
 
     x,w = ψ(domain,hhsk),hs*ψp(domain,hhsk).*singularities(domain,hhsk).*hpfast(h,hsk)
-    cutoff = !isinf.(x).*!isnan.(x).*!isinf.(w).*!isnan.(w)
+    cutoff = .!isinf.(x).*.!isnan.(x).*.!isinf.(w).*.!isnan.(w)
     return x[cutoff],w[cutoff]
 end
 

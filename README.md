@@ -27,13 +27,13 @@ using SincFun, DEQuadrature
 Suppose we are interested in calculating the integral of:
 
 ```julia
-f = x-> exp(1./abs2(x-z[1]))./abs2(x-z[2])
+f = x-> exp(1/abs2(x-z[1]))/abs2(x-z[2])
 ```
 
 on the interval `[-1,1]` with the singularities:
 
 ```julia
-z = [complex(-0.5,1.0),complex(0.5,0.5)]
+z = [complex(-0.5,1.0);complex(0.5,0.5)]
 ```
 
 as well as a square root singularity at the left endpoint and a logarithmic singularity at the right endpoint. We use the package function `DEMapValues` to calculate the optimized map and the function `DENodesAndWeights` to calculate nodes and weights. Looping over a geometrically increasing order, we can approximate the integral very accurately:
@@ -53,13 +53,13 @@ end
 The package has equal support for `BigFloat`s, making high precision calculations a breeze! Suppose we are interested in calculating the integral of:
 
 ```julia
-f = x-> exp(10./abs2(x-z[1])).*cos(10./abs2(x-z[2]))./abs2(x-z[3])./abs(x-z[4])
+f = x-> exp(10/abs2(x-z[1]))*cos(10/abs2(x-z[2]))/abs2(x-z[3])/abs(x-z[4])
 ```
 
 on the real line with the singularities:
 
 ```julia
-z = [complex(big(-2.0),1.0),complex(-1.0,.5),complex(1.0,0.25),complex(2.0,1.0)]
+z = [complex(big(-2.0),1.0);complex(-1.0,.5);complex(1.0,0.25);complex(2.0,1.0)]
 ```
 
 We start by setting the `digits` we desire:
@@ -85,13 +85,13 @@ end
 Suppose we are interested in calculating the integral of:
 
 ```julia
-f = x-> x./abs(x-z[1])./abs2(x-z[2])./abs2(x-z[3])
+f = x-> x/abs(x-z[1])/abs2(x-z[2])/abs2(x-z[3])
 ```
 
 on `[0,∞)` with the singularities:
 
 ```julia
-z = [complex(big(1.0),1.0),complex(2.,.5),complex(3,1//3)]
+z = [complex(big(1.0),1.0);complex(2.,.5);complex(3,1//3)]
 ```
 
 We use the package functions `sincpade` and `polyroots` to compute the approximate locations of the singularities adaptively. Then, we use the package function `DENodesAndWeights` to calculate the optimized nodes and weights. Looping over a geometrically increasing order, we can approximate the integral very accurately:
